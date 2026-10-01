@@ -1,5 +1,7 @@
 import { Vehicle, Make, Model, Lead, FinanceLead, SellCarRequest, SiteSettings, VehicleStatus, FuelType, TransmissionType, BodyType } from "@/types";
 import { INITIAL_VEHICLES, INITIAL_MAKES, INITIAL_MODELS, INITIAL_SITE_SETTINGS, INITIAL_LEADS, INITIAL_FINANCE_LEADS, INITIAL_SELL_CAR_REQUESTS } from "./mockData";
+import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 // In-memory runtime cache for development & fallback when Supabase keys are pending
 let vehiclesCache: Vehicle[] = [...INITIAL_VEHICLES];
@@ -110,6 +112,52 @@ export const DataStore = {
     }
 
     return result;
+  },
+  
+  async fetchVehiclesLive(): Promise<Vehicle[]> {
+    const client = supabaseAdmin || supabase;
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('vehicles')
+          .select(`
+            *,
+            make:makes(*),
+            model:models(*),
+            images:vehicle_images(*)
+          `)
+          .in('status', ['AVAILABLE', 'RESERVED', 'SOLD']);
+
+        if (!error && data && data.length > 0) {
+          vehiclesCache = data as Vehicle[];
+          return vehiclesCache;
+        }
+      } catch (e) {
+        console.error('Supabase fetchVehicles error:', e);
+      }
+    }
+    return [...vehiclesCache];
+  },
+
+  async fetchMakesLive(): Promise<Make[]> {
+    const client = supabaseAdmin || supabase;
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('makes')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          makesCache = data as Make[];
+          return makesCache;
+        }
+      } catch (e) {
+        console.error('Supabase fetchMakes error:', e);
+      }
+    }
+    return [...makesCache];
   },
 
   getAllVehiclesAdmin(): Vehicle[] {

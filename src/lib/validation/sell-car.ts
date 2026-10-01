@@ -8,12 +8,15 @@ export const sellCarSchema = z.object({
   fuel_type: z.string().optional(),
   transmission: z.string().optional(),
   registration: z.string().optional(),
+  variant: z.string().optional(),
+  condition: z.string().optional(),
   expected_price: z.number().min(1000, "Please enter an expected price").optional(),
   name: z.string().min(2, "Name is required"),
   phone: z.string().regex(/^[0-9]{10,12}$/, "Please enter a valid 10-digit mobile number"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   city: z.string().default("Barabanki"),
   description: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 
 export type SellCarFormData = z.infer<typeof sellCarSchema>;

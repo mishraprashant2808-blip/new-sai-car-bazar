@@ -8,8 +8,8 @@ import { DataStore } from "@/lib/data/store";
 export const revalidate = 60; // ISR cache revalidation
 
 export default async function HomePage() {
-  const makes = DataStore.getMakes();
-  const vehicles = DataStore.getVehicles();
+  const makes = await DataStore.fetchMakesLive();
+  const vehicles = await DataStore.fetchVehiclesLive();
 
   return (
     <div>

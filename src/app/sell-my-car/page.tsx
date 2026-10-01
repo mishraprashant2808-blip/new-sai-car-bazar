@@ -51,25 +51,35 @@ export default function SellMyCarPage() {
 
     setIsSubmitting(true);
     try {
-      DataStore.createSellCarRequest({
-        make,
-        model,
-        year: Number(year),
-        mileage: Number(mileage),
-        fuel_type: fuelType,
-        transmission,
-        registration,
-        expected_price: Number(expectedPrice),
-        name,
-        phone,
-        email,
-        city,
-        description,
+      const res = await fetch("/api/sell-my-car", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          make,
+          model,
+          year: Number(year),
+          mileage: Number(mileage),
+          fuel_type: fuelType,
+          transmission,
+          registration,
+          expected_price: Number(expectedPrice),
+          name,
+          phone,
+          email: email || undefined,
+          city,
+          description,
+        }),
       });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Failed to submit");
+      }
+
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
-      setErrorMsg("Failed to submit sell request. Please contact our showroom directly.");
+      setErrorMsg(err.message || "Failed to submit sell request. Please contact our showroom directly.");
     } finally {
       setIsSubmitting(false);
     }

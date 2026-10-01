@@ -47,22 +47,31 @@ export default function EnquiryModal({ vehicle, isOpen, onClose }: EnquiryModalP
 
     setIsSubmitting(true);
     try {
-      DataStore.createLead({
-        vehicle_id: vehicle?.id,
-        vehicle_name: vehicle ? `${vehicle.year} ${vehicle.make?.name} ${vehicle.model?.name}` : undefined,
-        name,
-        phone,
-        email,
-        message,
-        source: "website_enquiry_modal",
+      const res = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle_id: vehicle?.id,
+          name,
+          phone,
+          email: email || undefined,
+          message,
+          source: "website_enquiry_modal",
+        }),
       });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Failed to submit");
+      }
+
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
         onClose();
       }, 3000);
     } catch (err: any) {
-      setErrorMsg("Failed to submit enquiry. Please call us directly.");
+      setErrorMsg(err.message || "Failed to submit enquiry. Please call us directly.");
     } finally {
       setIsSubmitting(false);
     }

@@ -70,25 +70,34 @@ function FinanceCalculatorContent() {
 
     setIsSubmitting(true);
     try {
-      DataStore.createFinanceLead({
-        vehicle_name: paramVehicle || "General Used Car Loan",
-        name,
-        phone,
-        email,
-        vehicle_price: vehiclePrice,
-        loan_amount: loanPrincipal,
-        down_payment: downPaymentAmount,
-        interest_rate: interestRate,
-        tenure: tenureMonths,
-        estimated_emi: monthlyEMI,
-        employment_type: employmentType,
-        monthly_income: monthlyIncome,
-        message: formMsg,
+      const res = await fetch("/api/finance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          email: email || undefined,
+          vehicle_price: vehiclePrice,
+          loan_amount: loanPrincipal,
+          down_payment: downPaymentAmount,
+          interest_rate: interestRate,
+          tenure: tenureMonths,
+          estimated_emi: monthlyEMI,
+          employment_type: employmentType,
+          monthly_income: monthlyIncome,
+          message: formMsg || (paramVehicle ? `Finance application for ${paramVehicle}` : undefined),
+        }),
       });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Failed to submit");
+      }
+
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 5000);
     } catch (err: any) {
-      setErrorMsg("Failed to submit finance application. Please contact our showroom directly.");
+      setErrorMsg(err.message || "Failed to submit finance application. Please contact our showroom directly.");
     } finally {
       setIsSubmitting(false);
     }
