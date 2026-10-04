@@ -20,24 +20,29 @@ export async function POST(req: Request) {
     const client = supabaseAdmin || supabase;
 
     if (client) {
+      const descriptionParts = [
+        data.variant ? `Variant: ${data.variant}` : null,
+        data.condition ? `Condition: ${data.condition}` : null,
+      ].filter(Boolean).join(" | ");
+
       const { data: inserted, error } = await client
         .from("sell_car_requests")
         .insert([
           {
-            make_name: data.make,
-            model_name: data.model,
+            make: data.make,
+            model: data.model,
             year: data.year,
-            variant: data.variant || null,
             mileage: data.mileage,
-            fuel_type: data.fuel_type,
-            transmission: data.transmission,
+            fuel_type: data.fuel_type || null,
+            transmission: data.transmission || null,
+            registration: null,
             expected_price: data.expected_price || null,
-            condition: data.condition || null,
             name: data.name,
             phone: data.phone,
             email: data.email || null,
             city: data.city || "Barabanki",
-            images: data.images || [],
+            description: descriptionParts || null,
+            photo_urls: data.images || [],
             status: "NEW",
           },
         ])

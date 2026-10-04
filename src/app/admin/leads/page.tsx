@@ -24,23 +24,50 @@ export default function AdminLeadsPage() {
   const [financeLeads, setFinanceLeads] = useState<FinanceLead[]>([]);
   const [sellRequests, setSellRequests] = useState<SellCarRequest[]>([]);
 
-  const refreshData = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshData = async () => {
+    try {
+      const res = await fetch("/api/admin/leads");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setLeads(json.data.leads || []);
+        setFinanceLeads(json.data.financeLeads || []);
+        setSellRequests(json.data.sellRequests || []);
+        setIsLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to load leads from API, falling back:", err);
+    }
     setLeads(DataStore.getLeads());
     setFinanceLeads(DataStore.getFinanceLeads());
     setSellRequests(DataStore.getSellCarRequests());
+    setIsLoading(false);
   };
 
   useEffect(() => {
     refreshData();
   }, []);
 
-  const handleUpdateStatus = (id: string, newStatus: LeadStatus) => {
+  const handleUpdateStatus = async (id: string, newStatus: LeadStatus) => {
+    // Optimistic UI update
     if (activeTab === 'enquiries') {
-      DataStore.updateLeadStatus(id, newStatus);
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
     } else if (activeTab === 'finance') {
-      DataStore.updateFinanceLeadStatus(id, newStatus);
+      setFinanceLeads((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)));
     } else {
-      DataStore.updateSellCarStatus(id, newStatus);
+      setSellRequests((prev) => prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)));
+    }
+
+    try {
+      await fetch("/api/admin/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: activeTab, id, status: newStatus }),
+      });
+    } catch (err) {
+      console.error("Failed to update status on server:", err);
     }
     refreshData();
   };
