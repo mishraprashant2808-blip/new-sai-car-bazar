@@ -7,6 +7,7 @@ import MainHeader from "./MainHeader";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WishlistDrawer from "../wishlist/WishlistDrawer";
+import FloatingWhatsApp from "../common/FloatingWhatsApp";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <Footer />
       <WishlistDrawer isOpen={wishlistOpen} onClose={() => setWishlistOpen(false)} />
+      <FloatingWhatsApp />
     </div>
   );
 }

@@ -21,6 +21,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Editor
+# Editor & IDE
 .vscode/
 .idea/
+.gemini/
