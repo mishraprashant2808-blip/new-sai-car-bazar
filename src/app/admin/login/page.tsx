@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -12,22 +13,46 @@ export default function AdminLoginPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
 
-    // Simple demo authentication check (accepts admin password or any non-empty password for initial setup)
-    setTimeout(() => {
-      if (email.trim() && password.trim()) {
-        localStorage.setItem("nscb_admin_auth", "true");
-        localStorage.setItem("nscb_admin_email", email.trim());
-        router.push("/admin");
-      } else {
-        setErrorMsg("Please enter both email and password.");
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg("Please enter both email and password.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      if (!supabase) {
+        setErrorMsg("Authentication service is not configured. Check Supabase settings.");
         setIsLoading(false);
+        return;
       }
-    }, 600);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (error) {
+        setErrorMsg(error.message === "Invalid login credentials"
+          ? "Invalid email or password. Please try again."
+          : error.message
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.session) {
+        router.push("/admin");
+        router.refresh();
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,8 +72,9 @@ export default function AdminLoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-[#0F1827] py-8 px-6 shadow-2xl rounded-2xl border border-[#273549] sm:px-10">
           {errorMsg && (
-            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-              {errorMsg}
+            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -64,7 +90,7 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#162032] border border-[#273549] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ED0000]"
+                  className="w-full bg-[#162032] border border-[#273549] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ED0000] transition"
                 />
               </div>
             </div>
@@ -81,7 +107,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#162032] border border-[#273549] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ED0000]"
+                  className="w-full bg-[#162032] border border-[#273549] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ED0000] transition"
                 />
               </div>
             </div>
@@ -89,18 +115,19 @@ export default function AdminLoginPage() {
             <div className="p-3 bg-[#162032] rounded-lg border border-[#273549] text-xs text-slate-400">
               <div className="flex items-center gap-1.5 text-slate-300 font-semibold mb-1">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Development Access</span>
+                <span>Secure Authentication</span>
               </div>
-              <span>Enter any password (e.g. <strong>admin123</strong>) to access the management portal.</span>
+              <span>Protected by Supabase Auth with encrypted credentials.</span>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#ED0000] hover:bg-[#D10000] text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-red-950/40"
+              className="w-full bg-[#ED0000] hover:bg-[#D10000] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-red-950/40"
             >
               <span>{isLoading ? "Signing In..." : "Sign In to Admin Portal"}</span>
-              <ArrowRight className="w-4 h-4" />
+              {!isLoading && <ArrowRight className="w-4 h-4" />}
+              {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             </button>
           </form>
 

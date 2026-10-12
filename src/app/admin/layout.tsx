@@ -14,31 +14,65 @@ import {
   Menu,
   X,
   Shield,
+  User,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string>("");
 
-  // Check login state (except on login page)
+  // Check Supabase session on mount and route changes
   useEffect(() => {
     if (pathname === "/admin/login") {
       setIsAuthenticated(true);
       return;
     }
-    const authStatus = localStorage.getItem("nscb_admin_auth");
-    if (!authStatus) {
+
+    if (!supabase) {
       router.push("/admin/login");
-    } else {
-      setIsAuthenticated(true);
+      return;
     }
+
+    // Get current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.push("/admin/login");
+      } else {
+        setIsAuthenticated(true);
+        setAdminEmail(session.user.email || "");
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/admin/login");
+      } else {
+        setIsAuthenticated(true);
+        setAdminEmail(session.user.email || "");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [pathname, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("nscb_admin_auth");
+  const handleLogout = async () => {
+    try {
+      // Call server-side logout to clear cookies
+      await fetch("/api/admin/logout", { method: "POST" });
+      // Also sign out client-side
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch {
+      // Continue logout even on error
+    }
     router.push("/admin/login");
+    router.refresh();
   };
 
   if (pathname === "/admin/login") {
@@ -128,6 +162,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-[#1E293B] space-y-2">
+          {/* Logged in user */}
+          {adminEmail && (
+            <div className="flex items-center gap-2 px-4 py-2 text-xs text-slate-400 truncate">
+              <User className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="truncate">{adminEmail}</span>
+            </div>
+          )}
+
           <Link
             href="/"
             target="_blank"
