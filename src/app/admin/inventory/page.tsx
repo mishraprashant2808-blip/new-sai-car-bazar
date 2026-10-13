@@ -30,33 +30,59 @@ export default function AdminInventoryPage() {
 
   useEffect(() => {
     refreshVehicles();
+    DataStore.fetchVehiclesLive().then((liveVehicles) => {
+      if (liveVehicles && liveVehicles.length > 0) {
+        setVehicles(liveVehicles);
+      }
+    });
   }, []);
 
-  const handleToggleStatus = (id: string, currentStatus: Vehicle['status']) => {
+  const handleToggleStatus = async (id: string, currentStatus: Vehicle['status']) => {
     const nextStatus = currentStatus === 'AVAILABLE' ? 'SOLD' : 'AVAILABLE';
     DataStore.updateVehicle(id, { status: nextStatus });
     refreshVehicles();
+    fetch(`/api/admin/vehicles/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus }),
+    }).catch(() => {});
   };
 
   const handleToggleFeatured = (id: string, current: boolean) => {
     DataStore.updateVehicle(id, { is_featured: !current });
     refreshVehicles();
+    fetch(`/api/admin/vehicles/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_featured: !current }),
+    }).catch(() => {});
   };
 
   const handleToggleNewArrival = (id: string, current: boolean) => {
     DataStore.updateVehicle(id, { is_new_arrival: !current });
     refreshVehicles();
+    fetch(`/api/admin/vehicles/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_new_arrival: !current }),
+    }).catch(() => {});
   };
 
   const handleToggleHotDeal = (id: string, current: boolean) => {
     DataStore.updateVehicle(id, { is_hot_deal: !current });
     refreshVehicles();
+    fetch(`/api/admin/vehicles/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_hot_deal: !current }),
+    }).catch(() => {});
   };
 
   const handleDelete = (id: string, title: string) => {
     if (confirm(`Are you sure you want to remove "${title}" from inventory?`)) {
       DataStore.deleteVehicle(id);
       refreshVehicles();
+      fetch(`/api/admin/vehicles/${id}`, { method: "DELETE" }).catch(() => {});
     }
   };
 
@@ -240,16 +266,23 @@ export default function AdminInventoryPage() {
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
+                          href={`/admin/inventory/${vehicle.id}/edit`}
+                          className="p-1.5 text-slate-400 hover:text-amber-400 rounded transition"
+                          title="Edit vehicle details"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                        <Link
                           href={`/inventory/${vehicle.slug}`}
                           target="_blank"
-                          className="p-1.5 text-slate-400 hover:text-white rounded"
+                          className="p-1.5 text-slate-400 hover:text-white rounded transition"
                           title="View on public site"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Link>
                         <button
                           onClick={() => handleDelete(vehicle.id, title)}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 rounded"
+                          className="p-1.5 text-slate-400 hover:text-rose-400 rounded transition"
                           title="Delete vehicle"
                         >
                           <Trash2 className="w-4 h-4" />

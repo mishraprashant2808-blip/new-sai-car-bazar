@@ -169,7 +169,7 @@ export const DataStore = {
   },
 
   getVehicleById(id: string): Vehicle | undefined {
-    return vehiclesCache.find(v => v.id === id);
+    return vehiclesCache.find(v => v.id === id || v.slug === id);
   },
 
   getFeaturedVehicles(): Vehicle[] {
@@ -203,7 +203,7 @@ export const DataStore = {
   },
 
   updateVehicle(id: string, updates: Partial<Vehicle>): Vehicle | undefined {
-    const idx = vehiclesCache.findIndex(v => v.id === id);
+    const idx = vehiclesCache.findIndex(v => v.id === id || v.slug === id);
     if (idx === -1) return undefined;
 
     const make = updates.make_id ? makesCache.find(m => m.id === updates.make_id) : vehiclesCache[idx].make;
@@ -222,7 +222,7 @@ export const DataStore = {
 
   deleteVehicle(id: string): boolean {
     const initialLen = vehiclesCache.length;
-    vehiclesCache = vehiclesCache.filter(v => v.id !== id);
+    vehiclesCache = vehiclesCache.filter(v => v.id !== id && v.slug !== id);
     return vehiclesCache.length < initialLen;
   },
 
