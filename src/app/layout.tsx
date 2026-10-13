@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Sai Car Bazar",
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
+  },
   openGraph: {
     title: "New Sai Car Bazar | Quality Assured Used Cars in Barabanki",
     description: "Find your perfect certified pre-owned car with 150-point inspection and transparent pricing.",
