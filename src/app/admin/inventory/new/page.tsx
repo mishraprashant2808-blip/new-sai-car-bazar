@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Car, Plus, ArrowLeft, CheckCircle2, Upload } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
 import { FuelType, TransmissionType, BodyType, VehicleStatus } from "@/types";
+import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
 
 export default function AdminNewVehiclePage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function AdminNewVehiclePage() {
   const [regNumber, setRegNumber] = useState("UP 32 XX 0000");
   const [ownership, setOwnership] = useState("1st Owner");
   const [insurance, setInsurance] = useState("Comprehensive valid until 2026");
-  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80");
+  const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(true);
@@ -311,15 +312,12 @@ export default function AdminNewVehiclePage() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Primary Image URL</label>
-            <input
-              type="url"
-              required
+          <div className="mt-6 pt-6 border-t border-[#1E293B]">
+            <ImageUploadDropzone
               value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-[#162032] border border-[#273549] rounded-lg px-3.5 py-2.5 text-sm text-white font-mono text-xs"
+              onChange={setImageUrl}
+              label="Vehicle Cover Photo"
+              helperText="Upload car photos directly from your phone gallery or drag & drop files from your PC"
             />
           </div>
         </div>

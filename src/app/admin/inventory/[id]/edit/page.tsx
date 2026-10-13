@@ -21,6 +21,7 @@ import {
 import { DataStore } from "@/lib/data/store";
 import { Vehicle, FuelType, TransmissionType, BodyType, VehicleStatus, Make } from "@/types";
 import { formatPriceINR, formatKM } from "@/lib/utils";
+import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
 
 const ALL_FEATURE_OPTIONS = [
   "Leather Seats",
@@ -778,63 +779,25 @@ export default function EditVehiclePage({
             <p className="text-xs text-slate-400">High-resolution cover image and dealer inspection summary</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
-              {/* Image URL */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                  Primary Image URL (Direct WebP / JPG / PNG)
-                </label>
-                <div className="relative">
-                  <ImageIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-[#162032] border border-[#273549] rounded-lg pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ED0000] transition"
-                  />
-                </div>
-              </div>
+          <div className="space-y-6">
+            <ImageUploadDropzone
+              value={imageUrl}
+              onChange={setImageUrl}
+              label="Vehicle Cover Photo"
+              helperText="Upload car photos directly from your phone gallery or drag & drop files from your PC"
+            />
 
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                  Vehicle Description & Dealer Notes
-                </label>
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Certified condition, service history, inspection notes..."
-                  className="w-full bg-[#162032] border border-[#273549] rounded-lg p-3.5 text-xs text-white focus:outline-none focus:border-[#ED0000] transition leading-relaxed"
-                />
-              </div>
-            </div>
-
-            {/* Live Image Preview Card */}
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Live Image Preview
+                Vehicle Description & Dealer Notes
               </label>
-              <div className="aspect-video sm:aspect-4/3 w-full bg-[#0A0F1D] border border-[#273549] rounded-xl overflow-hidden relative group flex items-center justify-center">
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={imageUrl}
-                    alt={variant || "Vehicle Preview"}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="text-center p-4 text-slate-600">
-                    <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50" />
-                    <span className="text-[11px]">No cover image</span>
-                  </div>
-                )}
-              </div>
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Certified condition, service history, inspection notes..."
+                className="w-full bg-[#162032] border border-[#273549] rounded-lg p-3.5 text-xs text-white focus:outline-none focus:border-[#ED0000] transition leading-relaxed"
+              />
             </div>
           </div>
         </div>
