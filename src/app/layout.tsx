@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "New Sai Car Bazar | Certified Pre-Owned Cars in Barabanki, UP",
   description: "Browse thoroughly inspected quality used cars at New Sai Car Bazar, Barabanki. Transparent pricing, full vehicle history, flexible low-rate finance, and instant WhatsApp support.",
   keywords: ["Used Cars Barabanki", "Second Hand Car Barabanki", "New Sai Car Bazar", "Buy Used Car Lucknow UP", "Pre Owned Car Loan"],
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sai Car Bazar",
+  },
   openGraph: {
     title: "New Sai Car Bazar | Quality Assured Used Cars in Barabanki",
     description: "Find your perfect certified pre-owned car with 150-point inspection and transparent pricing.",
