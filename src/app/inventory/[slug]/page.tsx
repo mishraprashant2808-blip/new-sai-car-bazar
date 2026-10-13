@@ -84,8 +84,64 @@ export default function VehicleDetailPage({ params }: PageProps) {
     .filter((v) => v.id !== vehicle.id && (v.body_type === vehicle.body_type || v.make_id === vehicle.make_id))
     .slice(0, 3);
 
+  // Schema.org Car JSON-LD for rich Google Search listings
+  const carJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    "@id": `https://new-sai-car-bazar.vercel.app/inventory/${vehicle.slug}#car`,
+    "name": `${vehicle.year} ${vehicle.make?.name || ""} ${vehicle.model?.name || ""} ${vehicle.variant || ""}`.trim(),
+    "description": vehicle.description || `Certified pre-owned ${vehicle.year} ${vehicle.make?.name} ${vehicle.model?.name} available at New Sai Car Bazar Barabanki.`,
+    "image": images.map((img) => img.image_url),
+    "itemCondition": "https://schema.org/UsedCondition",
+    "brand": {
+      "@type": "Brand",
+      "name": vehicle.make?.name || "Automobile",
+    },
+    "model": vehicle.model?.name || vehicle.variant,
+    "vehicleModelDate": String(vehicle.year),
+    "mileageFromOdometer": {
+      "@type": "QuantitativeValue",
+      "value": vehicle.mileage,
+      "unitCode": "KMT",
+    },
+    "fuelType": vehicle.fuel_type,
+    "vehicleTransmission": vehicle.transmission,
+    "bodyType": vehicle.body_type,
+    "color": vehicle.color || "Standard",
+    "numberOfPreviousOwners": vehicle.ownership || "1st Owner",
+    "offers": {
+      "@type": "Offer",
+      "price": vehicle.price,
+      "priceCurrency": "INR",
+      "availability":
+        vehicle.status === "AVAILABLE"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/SoldOut",
+      "priceValidUntil": "2027-12-31",
+      "url": `https://new-sai-car-bazar.vercel.app/inventory/${vehicle.slug}`,
+      "seller": {
+        "@type": "AutoDealer",
+        "name": "New Sai Car Bazar",
+        "telephone": "+91-8858982362",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Near Railway Crossing, Lucknow-Ayodhya Road",
+          "addressLocality": "Barabanki",
+          "addressRegion": "Uttar Pradesh",
+          "postalCode": "225001",
+          "addressCountry": "IN",
+        },
+      },
+    },
+  };
+
   return (
     <div className="bg-[#0A0F1D] text-white min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      {/* Google Rich Snippet Car Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(carJsonLd) }}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center space-x-2 text-xs text-slate-400 mb-6">
