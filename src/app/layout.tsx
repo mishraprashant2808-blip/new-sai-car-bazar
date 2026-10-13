@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { WishlistProvider } from "@/context/WishlistContext";
 import AppLayout from "@/components/layout/AppLayout";
+import Analytics from "@/components/common/Analytics";
 
 export const metadata: Metadata = {
   title: "New Sai Car Bazar | Certified Pre-Owned Cars in Barabanki, UP",
@@ -28,6 +29,7 @@ export default function RootLayout({
             {children}
           </AppLayout>
         </WishlistProvider>
+        <Analytics />
       </body>
     </html>
   );
