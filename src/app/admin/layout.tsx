@@ -15,6 +15,7 @@ import {
   X,
   Shield,
   User,
+  FileText,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -96,6 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Add Vehicle", href: "/admin/inventory/new", icon: PlusCircle },
     { name: "CSV Bulk Import", href: "/admin/inventory/import", icon: FileSpreadsheet },
     { name: "Customer Leads", href: "/admin/leads", icon: Users },
+    { name: "Deeds & Register", href: "/admin/deeds", icon: FileText },
   ];
 
   return (

@@ -14,6 +14,7 @@ import {
   Sparkles,
   Phone,
   MessageCircle,
+  FileText,
 } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
 import { Vehicle, Lead } from "@/types";
@@ -49,6 +50,13 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin/deeds"
+            className="bg-[#1A2639] hover:bg-[#25354F] text-slate-200 border border-[#273549] text-xs sm:text-sm font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4 text-rose-400" />
+            <span>Deeds & Register</span>
+          </Link>
           <Link
             href="/admin/inventory/new"
             className="bg-[#ED0000] hover:bg-[#D10000] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-2 shadow-lg shadow-red-950/40"
