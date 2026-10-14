@@ -4,6 +4,7 @@ import BrowseByMake from "@/components/home/BrowseByMake";
 import FeaturedListings from "@/components/home/FeaturedListings";
 import WhyBuySection from "@/components/home/WhyBuySection";
 import LeadershipSection from "@/components/about/LeadershipSection";
+import InstagramBanner from "@/components/home/InstagramBanner";
 import { DataStore } from "@/lib/data/store";
 
 export const revalidate = 60; // ISR cache revalidation
@@ -20,6 +21,9 @@ export default async function HomePage() {
     "alternateName": "New Sai Car Bazar Barabanki",
     "description": "Certified pre-owned and quality used cars dealership in Barabanki and Lucknow, Uttar Pradesh. 150-point inspection, instant car loan financing, exchange options, and RC transfer support.",
     "url": "https://new-sai-car-bazar.vercel.app",
+    "sameAs": [
+      "https://www.instagram.com/sai_car_deals/"
+    ],
     "telephone": "+91-8858982362",
     "priceRange": "₹₹₹",
     "currenciesAccepted": "INR",
@@ -79,6 +83,7 @@ export default async function HomePage() {
       <HeroSection />
       <BrowseByMake makes={makes} />
       <FeaturedListings vehicles={vehicles} />
+      <InstagramBanner />
       <WhyBuySection />
       <div className="bg-[#070B14] border-t border-[#1C293A] px-4 sm:px-6 lg:px-8">
         <LeadershipSection />

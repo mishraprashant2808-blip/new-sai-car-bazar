@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Phone, Mail, HelpCircle, Calculator } from "lucide-react";
+import { Phone, Mail, HelpCircle, Calculator, Instagram } from "lucide-react";
 import { createPhoneCallUrl } from "@/lib/utils";
 
 export default function TopBar() {
@@ -33,13 +33,23 @@ export default function TopBar() {
           </a>
         </div>
 
-        {/* Right: Quick Links */}
-        <div className="flex items-center space-x-6">
+        {/* Right: Instagram & Quick Links */}
+        <div className="flex items-center space-x-5">
+          <a
+            href="https://www.instagram.com/sai_car_deals/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 bg-black/20 hover:bg-black/35 px-2.5 py-0.5 rounded-full text-xs font-bold transition"
+            title="Follow New Sai Car Bazar on Instagram"
+          >
+            <Instagram className="w-3.5 h-3.5 text-pink-200" />
+            <span>@sai_car_deals</span>
+          </a>
           <Link
             href="/finance"
-            className="flex items-center gap-1 hover:text-white/90 transition-opacity"
+            className="flex items-center gap-1 hover:text-white/90 transition-opacity hidden md:flex"
           >
-            <Calculator className="w-3.5 h-3.5 hidden sm:inline" />
+            <Calculator className="w-3.5 h-3.5" />
             <span>Finance Calculator</span>
           </Link>
           <Link

@@ -85,8 +85,14 @@ export default function Footer() {
               <a href="#" className="w-9 h-9 rounded-full bg-[#162032] flex items-center justify-center hover:bg-[#ED0000] hover:text-white transition" title="Facebook">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-[#162032] flex items-center justify-center hover:bg-[#ED0000] hover:text-white transition" title="Instagram">
-                <Instagram className="w-4 h-4" />
+              <a
+                href="https://www.instagram.com/sai_car_deals/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#162032] flex items-center justify-center hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 hover:text-white transition group"
+                title="Follow @sai_car_deals on Instagram"
+              >
+                <Instagram className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </a>
               <a href="#" className="w-9 h-9 rounded-full bg-[#162032] flex items-center justify-center hover:bg-[#ED0000] hover:text-white transition" title="YouTube">
                 <Youtube className="w-4 h-4" />

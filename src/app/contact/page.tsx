@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle2 } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle2, Instagram } from "lucide-react";
 import { createPhoneCallUrl, createWhatsAppUrl } from "@/lib/utils";
 import { DataStore } from "@/lib/data/store";
 import { leadSchema } from "@/lib/validation/lead";
@@ -111,6 +111,25 @@ export default function ContactPage() {
                     +91 8172946630
                   </a>
                   <div className="text-xs text-slate-400 mt-0.5">Quick replies & car photos</div>
+                </div>
+              </div>
+
+              {/* Instagram */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500/20 via-rose-500/20 to-purple-600/20 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
+                  <Instagram className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-semibold uppercase">Instagram Profile</div>
+                  <a
+                    href="https://www.instagram.com/sai_car_deals/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-rose-400 hover:text-rose-300 transition block mt-0.5"
+                  >
+                    @sai_car_deals
+                  </a>
+                  <div className="text-xs text-slate-400 mt-0.5">Follow for daily stock reels & videos</div>
                 </div>
               </div>
 
