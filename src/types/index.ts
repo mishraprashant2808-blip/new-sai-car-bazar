@@ -130,3 +130,60 @@ export interface SiteSettings {
   default_interest_rate: number;
   default_down_payment_pct: number;
 }
+
+export type DeedType = 'PURCHASE' | 'SALE';
+export type RCTransferStatus = 'PENDING' | 'AT_RTO' | 'COMPLETED';
+
+export interface Agreement {
+  id: string;
+  deed_type: DeedType;
+  deed_number: string;
+  deed_date: string;
+  party_name: string;
+  party_relation_type?: string;
+  party_relation_name?: string;
+  party_address: string;
+  party_mobile: string;
+  party_id_type?: string;
+  party_id_number?: string;
+  vehicle_id?: string;
+  make_model: string;
+  variant?: string;
+  color?: string;
+  mfg_year?: number;
+  reg_year?: number;
+  reg_number: string;
+  fuel_type?: string;
+  chassis_number?: string;
+  engine_number?: string;
+  odometer_reading?: number;
+  reg_rto?: string;
+  insurance_policy_no?: string;
+  insurance_validity?: string;
+  puc_number?: string;
+  puc_validity?: string;
+  total_price: number;
+  total_price_words: string;
+  advance_amount: number;
+  advance_receipt_no?: string;
+  balance_amount: number;
+  payment_mode_1?: string;
+  payment_ref_1?: string;
+  payment_date_1?: string;
+  payment_place_1?: string;
+  rc_transfer_status: RCTransferStatus;
+  form29_received?: boolean;
+  form30_received?: boolean;
+  rc_transfer_date?: string;
+  rto_receipt_no?: string;
+  notes?: string;
+  witness1_name?: string;
+  witness1_address?: string;
+  witness1_mobile?: string;
+  witness2_name?: string;
+  witness2_address?: string;
+  witness2_mobile?: string;
+  created_at: string;
+  updated_at?: string;
+}
+

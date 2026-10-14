@@ -1,5 +1,5 @@
-import { Vehicle, Make, Model, Lead, FinanceLead, SellCarRequest, SiteSettings, VehicleStatus, FuelType, TransmissionType, BodyType } from "@/types";
-import { INITIAL_VEHICLES, INITIAL_MAKES, INITIAL_MODELS, INITIAL_SITE_SETTINGS, INITIAL_LEADS, INITIAL_FINANCE_LEADS, INITIAL_SELL_CAR_REQUESTS } from "./mockData";
+import { Vehicle, Make, Model, Lead, FinanceLead, SellCarRequest, SiteSettings, VehicleStatus, FuelType, TransmissionType, BodyType, Agreement } from "@/types";
+import { INITIAL_VEHICLES, INITIAL_MAKES, INITIAL_MODELS, INITIAL_SITE_SETTINGS, INITIAL_LEADS, INITIAL_FINANCE_LEADS, INITIAL_SELL_CAR_REQUESTS, INITIAL_AGREEMENTS } from "./mockData";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -11,6 +11,20 @@ let siteSettingsCache: SiteSettings = { ...INITIAL_SITE_SETTINGS };
 let leadsCache: Lead[] = [...INITIAL_LEADS];
 let financeLeadsCache: FinanceLead[] = [...INITIAL_FINANCE_LEADS];
 let sellCarCache: SellCarRequest[] = [...INITIAL_SELL_CAR_REQUESTS];
+// Global singleton store for agreements across API routes and page requests
+const globalStore = globalThis as unknown as { __agreementsCache?: Agreement[] };
+if (!globalStore.__agreementsCache) {
+  globalStore.__agreementsCache = [...INITIAL_AGREEMENTS];
+}
+function getAgreementsCache(): Agreement[] {
+  if (!globalStore.__agreementsCache) {
+    globalStore.__agreementsCache = [...INITIAL_AGREEMENTS];
+  }
+  return globalStore.__agreementsCache;
+}
+function setAgreementsCache(items: Agreement[]) {
+  globalStore.__agreementsCache = items;
+}
 
 export interface InventoryFilterParams {
   search?: string;
@@ -435,5 +449,118 @@ export const DataStore = {
       failed: failedCount,
       errors,
     };
-  }
+  },
+
+  // --- AGREEMENTS / DEEDS ---
+  getAgreements(params?: { type?: string; rc_status?: string; search?: string }): Agreement[] {
+    let result = [...getAgreementsCache()];
+    if (params?.type) {
+      result = result.filter(a => a.deed_type === params.type);
+    }
+    if (params?.rc_status) {
+      result = result.filter(a => a.rc_transfer_status === params.rc_status);
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase().trim();
+      result = result.filter(a =>
+        a.party_name?.toLowerCase().includes(q) ||
+        a.party_mobile?.includes(q) ||
+        a.reg_number?.toLowerCase().includes(q) ||
+        a.make_model?.toLowerCase().includes(q) ||
+        a.deed_number?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  },
+
+  getAgreementById(id: string): Agreement | undefined {
+    return getAgreementsCache().find(a => a.id === id);
+  },
+
+  createAgreement(data: Partial<Agreement>): Agreement {
+    const list = getAgreementsCache();
+    const prefix = data.deed_type === "PURCHASE" ? "NSCB-KRAY" : "NSCB-VIKRAY";
+    const year = new Date().getFullYear();
+    const count = list.filter(a => a.deed_type === data.deed_type).length + 1;
+    const num = String(count).padStart(3, "0");
+    const deed_number = data.deed_number || `${prefix}-${year}-${num}`;
+
+    const newAgreement: Agreement = {
+      id: data.id || `agr-${Date.now()}`,
+      deed_type: data.deed_type || "SALE",
+      deed_number,
+      deed_date: data.deed_date || new Date().toISOString().slice(0, 10),
+      party_name: data.party_name || "",
+      party_relation_type: data.party_relation_type || "पुत्र",
+      party_relation_name: data.party_relation_name || "",
+      party_address: data.party_address || "",
+      party_mobile: data.party_mobile || "",
+      party_id_type: data.party_id_type || "Aadhaar",
+      party_id_number: data.party_id_number || "",
+      vehicle_id: data.vehicle_id,
+      make_model: data.make_model || "",
+      variant: data.variant,
+      color: data.color,
+      mfg_year: data.mfg_year,
+      reg_year: data.reg_year,
+      reg_number: data.reg_number || "",
+      fuel_type: data.fuel_type || "PETROL",
+      chassis_number: data.chassis_number,
+      engine_number: data.engine_number,
+      odometer_reading: data.odometer_reading,
+      reg_rto: data.reg_rto,
+      insurance_policy_no: data.insurance_policy_no,
+      insurance_validity: data.insurance_validity,
+      puc_number: data.puc_number,
+      puc_validity: data.puc_validity,
+      total_price: data.total_price || 0,
+      total_price_words: data.total_price_words || "",
+      advance_amount: data.advance_amount || 0,
+      advance_receipt_no: data.advance_receipt_no,
+      balance_amount: data.balance_amount || 0,
+      payment_mode_1: data.payment_mode_1,
+      payment_ref_1: data.payment_ref_1,
+      payment_date_1: data.payment_date_1,
+      payment_place_1: data.payment_place_1,
+      rc_transfer_status: data.rc_transfer_status || "PENDING",
+      form29_received: data.form29_received || false,
+      form30_received: data.form30_received || false,
+      rc_transfer_date: data.rc_transfer_date,
+      rto_receipt_no: data.rto_receipt_no,
+      notes: data.notes,
+      witness1_name: data.witness1_name,
+      witness1_address: data.witness1_address,
+      witness1_mobile: data.witness1_mobile,
+      witness2_name: data.witness2_name,
+      witness2_address: data.witness2_address,
+      witness2_mobile: data.witness2_mobile,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    list.unshift(newAgreement);
+    setAgreementsCache(list);
+    return newAgreement;
+  },
+
+  updateAgreement(id: string, updates: Partial<Agreement>): Agreement | undefined {
+    const list = getAgreementsCache();
+    const index = list.findIndex(a => a.id === id);
+    if (index === -1) return undefined;
+    list[index] = {
+      ...list[index],
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    setAgreementsCache(list);
+    return list[index];
+  },
+
+  deleteAgreement(id: string): boolean {
+    const list = getAgreementsCache();
+    const before = list.length;
+    const filtered = list.filter(a => a.id !== id);
+    setAgreementsCache(filtered);
+    return filtered.length < before;
+  },
 };
