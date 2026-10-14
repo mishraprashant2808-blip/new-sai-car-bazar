@@ -5,6 +5,7 @@ import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle2 } from "l
 import { createPhoneCallUrl, createWhatsAppUrl } from "@/lib/utils";
 import { DataStore } from "@/lib/data/store";
 import { leadSchema } from "@/lib/validation/lead";
+import LeadershipSection from "@/components/about/LeadershipSection";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -242,6 +243,11 @@ export default function ContactPage() {
               </form>
             )}
           </div>
+        </div>
+
+        {/* Leadership Contact Section */}
+        <div className="mt-20 pt-12 border-t border-[#1C293A]">
+          <LeadershipSection />
         </div>
       </div>
     </div>

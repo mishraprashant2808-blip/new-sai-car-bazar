@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShieldCheck, Award, HeartHandshake, CheckCircle2, Phone, MapPin, ArrowRight } from "lucide-react";
 
+import LeadershipSection from "@/components/about/LeadershipSection";
+
 export default function AboutPage() {
   return (
     <div className="bg-[#0A0F1D] text-white min-h-screen py-16 px-4 sm:px-6 lg:px-8">
@@ -99,6 +101,9 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+
+        {/* Leadership Section */}
+        <LeadershipSection />
       </div>
     </div>
   );

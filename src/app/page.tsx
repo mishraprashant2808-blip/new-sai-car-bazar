@@ -3,6 +3,7 @@ import HeroSection from "@/components/home/HeroSection";
 import BrowseByMake from "@/components/home/BrowseByMake";
 import FeaturedListings from "@/components/home/FeaturedListings";
 import WhyBuySection from "@/components/home/WhyBuySection";
+import LeadershipSection from "@/components/about/LeadershipSection";
 import { DataStore } from "@/lib/data/store";
 
 export const revalidate = 60; // ISR cache revalidation
@@ -79,6 +80,9 @@ export default async function HomePage() {
       <BrowseByMake makes={makes} />
       <FeaturedListings vehicles={vehicles} />
       <WhyBuySection />
+      <div className="bg-[#070B14] border-t border-[#1C293A] px-4 sm:px-6 lg:px-8">
+        <LeadershipSection />
+      </div>
     </div>
   );
 }
