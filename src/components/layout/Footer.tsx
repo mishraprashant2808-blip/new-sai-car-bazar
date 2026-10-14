@@ -165,6 +165,11 @@ export default function Footer() {
                   Dealership Admin
                 </Link>
               </li>
+              <li>
+                <Link href="/admin/deeds" className="hover:text-rose-400 text-xs text-slate-400 flex items-center gap-1 transition">
+                  <span>Deeds & Customer Register</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
