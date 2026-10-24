@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
 import { Vehicle, FuelType, TransmissionType, BodyType, VehicleStatus, Make } from "@/types";
-import { formatPriceINR, formatKM } from "@/lib/utils";
+import { formatPriceINR, formatKM, getAppropriateCarPhoto } from "@/lib/utils";
 import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
 
 const ALL_FEATURE_OPTIONS = [
@@ -145,7 +145,11 @@ export default function EditVehiclePage({
     setRegNumber(v.registration_number || "");
     setOwnership(v.ownership || "1st Owner");
     setInsurance(v.insurance_validity || "");
-    setImageUrl(v.images?.[0]?.image_url || "");
+    const rawImg = v.images?.[0]?.image_url;
+    const finalImg = rawImg && !rawImg.includes("photo-1549399542-7e3f8b79c341") && !rawImg.includes("photo-1617814076367") && !rawImg.includes("photo-1533473359331")
+      ? rawImg
+      : getAppropriateCarPhoto(v.make?.name, v.model?.name || v.variant, v.body_type);
+    setImageUrl(finalImg);
     setDescription(v.description || "");
     setIsFeatured(Boolean(v.is_featured));
     setIsNewArrival(Boolean(v.is_new_arrival));
@@ -176,6 +180,9 @@ export default function EditVehiclePage({
     setErrorMsg("");
     setSuccessMsg("");
 
+    const selectedMakeObj = makes.find((m) => m.id === makeId);
+    const finalPhoto = imageUrl.trim() || getAppropriateCarPhoto(selectedMakeObj?.name, modelName || variant, bodyType);
+
     const updatedData: Partial<Vehicle> & { imageUrl?: string } = {
       make_id: makeId,
       variant,
@@ -196,17 +203,17 @@ export default function EditVehiclePage({
       is_featured: isFeatured,
       is_new_arrival: isNewArrival,
       is_hot_deal: isHotDeal,
-      imageUrl: imageUrl.trim() || undefined,
+      imageUrl: finalPhoto,
     };
 
-    if (imageUrl.trim() && vehicle) {
+    if (vehicle) {
       updatedData.images = [
         {
           id: vehicle.images?.[0]?.id || `img-${Date.now()}`,
           vehicle_id: vehicle.id,
-          storage_path: "cars/photo.webp",
-          image_url: imageUrl.trim(),
-          alt_text: `${variant || "Vehicle"}`,
+          storage_path: finalPhoto,
+          image_url: finalPhoto,
+          alt_text: `${variant || modelName || "Vehicle"}`,
           sort_order: 0,
           is_primary: true,
         },
