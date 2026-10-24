@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, Fuel, Gauge, Settings, ShieldCheck, MessageCircle } from "lucide-react";
 import { Vehicle } from "@/types";
-import { formatPriceINR, formatKM, calculateEMI, createWhatsAppUrl } from "@/lib/utils";
+import { formatPriceINR, formatKM, calculateEMI, createWhatsAppUrl, getAppropriateCarPhoto } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 
 interface VehicleCardProps {
@@ -16,16 +16,18 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isSaved = isInWishlist(vehicle.id);
 
+  const rawImage = vehicle.images?.find((img) => img.is_primary)?.image_url || vehicle.images?.[0]?.image_url;
   const primaryImage =
-    vehicle.images.find((img) => img.is_primary)?.image_url ||
-    vehicle.images[0]?.image_url ||
-    "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80";
+    rawImage && !rawImage.includes("photo-1549399542-7e3f8b79c341") && !rawImage.includes("photo-1617814076367") && !rawImage.includes("photo-1533473359331") && !rawImage.includes("photo-1590362891991") && !rawImage.includes("photo-1605559424843")
+      ? rawImage
+      : getAppropriateCarPhoto(vehicle.make?.name, vehicle.model?.name, vehicle.body_type);
 
   // Calculate 5-year EMI estimate with 20% down payment
   const loanPrincipal = vehicle.price * 0.8;
   const emiCalc = calculateEMI(loanPrincipal, 9.5, 60);
 
-  const whatsappMessage = `Hello New Sai Car Bazar, I am interested in the ${vehicle.year} ${vehicle.make?.name} ${vehicle.model?.name} (${vehicle.variant}) listed at ${formatPriceINR(vehicle.price)}. Is it currently available for inspection?`;
+  const carTitle = `${vehicle.year} ${vehicle.make?.name || ""} ${vehicle.model?.name || vehicle.variant || "Car"}`;
+  const whatsappMessage = `Hello New Sai Car Bazar, I am interested in the ${carTitle} listed at ${formatPriceINR(vehicle.price)}. Is it currently available for inspection?`;
 
   return (
     <div className="group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
@@ -87,7 +89,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           {/* Title */}
           <Link href={`/inventory/${vehicle.slug}`}>
             <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl group-hover:text-[#ED0000] transition line-clamp-1">
-              {vehicle.year} {vehicle.make?.name} {vehicle.model?.name}
+              {carTitle}
             </h3>
           </Link>
           <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">

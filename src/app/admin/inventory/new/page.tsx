@@ -7,6 +7,7 @@ import { Car, Plus, ArrowLeft, CheckCircle2, Upload } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
 import { FuelType, TransmissionType, BodyType, VehicleStatus } from "@/types";
 import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
+import { getAppropriateCarPhoto } from "@/lib/utils";
 
 export default function AdminNewVehiclePage() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function AdminNewVehiclePage() {
   const [isNewArrival, setIsNewArrival] = useState(true);
   const [isHotDeal, setIsHotDeal] = useState(false);
   const [status, setStatus] = useState<VehicleStatus>("AVAILABLE");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Selected features
   const defaultFeatureOptions = [
@@ -60,18 +62,29 @@ export default function AdminNewVehiclePage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const selectedMakeObj = makes.find((m) => m.id === makeId) || makes[0];
     const generatedSlug = `${selectedMakeObj.name.toLowerCase()}-${modelName.toLowerCase().replace(/\s+/g, '-')}-${year}-${Date.now().toString().slice(-4)}`;
     const stockNumber = `NSCB-${year}-${Math.floor(100 + Math.random() * 900)}`;
 
-    DataStore.addVehicle({
+    const finalImage = imageUrl.trim() || getAppropriateCarPhoto(selectedMakeObj.name, modelName, bodyType);
+
+    const newVehiclePayload = {
       stock_number: stockNumber,
       slug: generatedSlug,
       make_id: makeId,
       model_id: "mod-custom",
+      make: selectedMakeObj,
+      model: {
+        id: "mod-custom",
+        make_id: makeId,
+        name: modelName,
+        slug: modelName.toLowerCase().replace(/\s+/g, '-'),
+        is_active: true,
+      },
       variant,
       year: Number(year),
       price: Number(price),
@@ -95,14 +108,28 @@ export default function AdminNewVehiclePage() {
         {
           id: `img-${Date.now()}`,
           vehicle_id: "new",
-          storage_path: "cars/photo.webp",
-          image_url: imageUrl,
+          storage_path: finalImage,
+          image_url: finalImage,
           alt_text: `${selectedMakeObj.name} ${modelName}`,
           sort_order: 0,
           is_primary: true,
         },
       ],
-    });
+    };
+
+    // 1. Immediately store into client-side singleton & localStorage
+    DataStore.addVehicle(newVehiclePayload);
+
+    // 2. Persist to API route
+    try {
+      await fetch("/api/admin/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newVehiclePayload),
+      });
+    } catch (err) {
+      console.warn("API add vehicle background sync error:", err);
+    }
 
     router.push("/admin/inventory");
   };

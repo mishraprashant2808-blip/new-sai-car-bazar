@@ -22,7 +22,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
-import { formatPriceINR, formatKM, calculateEMI, createWhatsAppUrl, createPhoneCallUrl } from "@/lib/utils";
+import { formatPriceINR, formatKM, calculateEMI, createWhatsAppUrl, createPhoneCallUrl, getAppropriateCarPhoto } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import EnquiryModal from "@/components/ui/EnquiryModal";
 
@@ -44,15 +44,16 @@ export default function VehicleDetailPage({ params }: PageProps) {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const images = vehicle.images.length > 0
+  const fallbackPhoto = getAppropriateCarPhoto(vehicle.make?.name, vehicle.model?.name, vehicle.body_type);
+  const images = vehicle.images.length > 0 && !vehicle.images[0]?.image_url?.includes("photo-1549399542-7e3f8b79c341") && !vehicle.images[0]?.image_url?.includes("photo-1617814076367") && !vehicle.images[0]?.image_url?.includes("photo-1533473359331") && !vehicle.images[0]?.image_url?.includes("photo-1590362891991") && !vehicle.images[0]?.image_url?.includes("photo-1605559424843")
     ? vehicle.images
     : [
         {
-          id: "placeholder",
+          id: "primary",
           vehicle_id: vehicle.id,
-          storage_path: "cars/placeholder.webp",
-          image_url: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80",
-          alt_text: vehicle.variant || "Car",
+          storage_path: fallbackPhoto,
+          image_url: fallbackPhoto,
+          alt_text: `${vehicle.year} ${vehicle.make?.name || ""} ${vehicle.model?.name || vehicle.variant || "Car"}`,
           sort_order: 0,
           is_primary: true,
         },
@@ -498,7 +499,7 @@ export default function VehicleDetailPage({ params }: PageProps) {
                   <Link href={`/inventory/${simCar.slug}`} className="block">
                     <div className="relative aspect-[16/10] w-full">
                       <Image
-                        src={simCar.images[0]?.image_url || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"}
+                        src={simCar.images[0]?.image_url && !simCar.images[0]?.image_url?.includes("photo-1549399542-7e3f8b79c341") ? simCar.images[0].image_url : getAppropriateCarPhoto(simCar.make?.name, simCar.model?.name, simCar.body_type)}
                         alt={simCar.variant || "Car"}
                         fill
                         className="object-cover"

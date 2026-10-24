@@ -81,3 +81,35 @@ export function createPhoneCallUrl(phone: string): string {
   const cleanPhone = phone.replace(/\s+/g, "");
   return `tel:${cleanPhone}`;
 }
+
+/**
+ * Returns an authentic, showroom-quality photo matching the car make, model, or body type.
+ * Never falls back to foreign supercars or random Porsches/BMWs.
+ */
+export function getAppropriateCarPhoto(make?: string, model?: string, bodyType?: string): string {
+  const m = `${make || ""} ${model || ""}`.toLowerCase();
+  
+  if (m.includes("fortuner")) return "/cars/fortuner.jpg";
+  if (m.includes("creta")) return "/cars/creta.jpg";
+  if (m.includes("scorpio")) return "/cars/scorpio.jpg";
+  if (m.includes("harrier")) return "/cars/harrier.jpg";
+  if (m.includes("city")) return "/cars/city.jpg";
+  if (m.includes("bmw") || m.includes("3 series") || m.includes("320d")) return "/cars/bmw.jpg";
+
+  // By brand defaults
+  if (m.includes("toyota") || m.includes("innova") || m.includes("glanza") || m.includes("hyryder")) return "/cars/fortuner.jpg";
+  if (m.includes("hyundai") || m.includes("venue") || m.includes("i20") || m.includes("verna")) return "/cars/creta.jpg";
+  if (m.includes("mahindra") || m.includes("thar") || m.includes("xuv") || m.includes("bolero")) return "/cars/scorpio.jpg";
+  if (m.includes("tata") || m.includes("safari") || m.includes("nexon") || m.includes("punch")) return "/cars/harrier.jpg";
+  if (m.includes("honda") || m.includes("amaze") || m.includes("elevate")) return "/cars/city.jpg";
+  if (m.includes("maruti") || m.includes("suzuki") || m.includes("swift") || m.includes("baleno") || m.includes("brezza") || m.includes("wagonr") || m.includes("ertiga")) return "/cars/creta.jpg";
+
+  // By body type
+  const bt = (bodyType || "").toUpperCase();
+  if (bt === "SUV" || bt === "MUV") return "/cars/scorpio.jpg";
+  if (bt === "SEDAN") return "/cars/city.jpg";
+  if (bt === "HATCHBACK") return "/cars/creta.jpg";
+
+  return "/cars/fortuner.jpg";
+}
+

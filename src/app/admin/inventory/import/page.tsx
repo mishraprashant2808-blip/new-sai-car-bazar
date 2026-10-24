@@ -17,6 +17,7 @@ Mahindra,Thar,LX 4-Str Hard Top Diesel AT,2022,1650000,28000,DIESEL,AUTOMATIC,SU
 
   const [csvContent, setCsvContent] = useState(SAMPLE_CSV);
   const [copied, setCopied] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<{
     total: number;
     valid: number;
@@ -43,10 +44,21 @@ Mahindra,Thar,LX 4-Str Hard Top Diesel AT,2022,1650000,28000,DIESEL,AUTOMATIC,SU
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!csvContent.trim()) return;
+    setIsImporting(true);
+    try {
+      await fetch('/api/admin/vehicles/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csvContent })
+      });
+    } catch (e) {
+      console.warn("API import background sync error:", e);
+    }
     const res = DataStore.importVehiclesCSV(csvContent);
     setResult(res);
+    setIsImporting(false);
   };
 
   return (
@@ -173,12 +185,20 @@ Mahindra,Thar,LX 4-Str Hard Top Diesel AT,2022,1650000,28000,DIESEL,AUTOMATIC,SU
               </div>
             )}
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex flex-wrap justify-end gap-3">
+              <Link
+                href="/inventory"
+                target="_blank"
+                className="bg-[#1E293B] hover:bg-[#2A3B54] text-white font-bold text-xs px-5 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5"
+              >
+                <span>Browse Live Inventory</span>
+                <span className="text-[10px] text-slate-400">↗</span>
+              </Link>
               <Link
                 href="/admin/inventory"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2 rounded-lg transition"
               >
-                Go to Inventory List →
+                Go to Admin Inventory →
               </Link>
             </div>
           </div>

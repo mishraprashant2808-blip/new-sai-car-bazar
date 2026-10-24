@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Filter, SlidersHorizontal, ArrowUpDown, X, RotateCcw } from "lucide-react";
 import VehicleCard from "@/components/ui/VehicleCard";
 import { DataStore, InventoryFilterParams } from "@/lib/data/store";
-import { Make } from "@/types";
+import { Make, Vehicle } from "@/types";
 
 function InventoryContent() {
   const searchParams = useSearchParams();
@@ -18,6 +18,7 @@ function InventoryContent() {
   const initialTransmission = searchParams.get("transmission") || "all";
   const initialMaxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 5000000;
 
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => DataStore.getVehicles());
   const [search, setSearch] = useState(initialSearch);
   const [selectedMake, setSelectedMake] = useState(initialMake);
   const [selectedBodyType, setSelectedBodyType] = useState(initialBodyType);
@@ -37,20 +38,118 @@ function InventoryContent() {
     }
   }, [searchParams]);
 
-  const makes: Make[] = useMemo(() => DataStore.getMakes(), []);
+  // Real-time synchronization for manual additions & CSV imports
+  useEffect(() => {
+    // 1. Initial local load
+    setVehicles(DataStore.getVehicles());
+
+    // 2. Window event listener when vehicle is added/imported
+    const handleSync = () => {
+      setVehicles(DataStore.getVehicles());
+    };
+    window.addEventListener("nscb-vehicles-updated", handleSync);
+    window.addEventListener("storage", handleSync);
+
+    // 3. Fetch from API endpoint to pull any server-persisted vehicles
+    fetch("/api/admin/vehicles")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData?.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          const current = DataStore.getVehicles();
+          const apiIds = new Set(resData.data.map((v: any) => v.id));
+          const combined = [...resData.data, ...current.filter((c) => !apiIds.has(c.id))];
+          setVehicles(combined);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      window.removeEventListener("nscb-vehicles-updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
+
+  const makes = useMemo(() => {
+    const baseMakes = DataStore.getMakes();
+    const existingSlugs = new Set(baseMakes.map((m) => (m.slug || m.name).toLowerCase()));
+    const dynamicMakes = [...baseMakes];
+
+    vehicles.forEach((v) => {
+      if (v.make && v.make.name && !existingSlugs.has((v.make.slug || v.make.name).toLowerCase())) {
+        existingSlugs.add((v.make.slug || v.make.name).toLowerCase());
+        dynamicMakes.push({
+          id: v.make.id || `m-${v.make.name.toLowerCase()}`,
+          name: v.make.name,
+          slug: v.make.slug || v.make.name.toLowerCase().replace(/\s+/g, "-"),
+          is_active: true,
+          sort_order: 99,
+        });
+      }
+    });
+
+    return dynamicMakes;
+  }, [vehicles]);
 
   // Filter vehicles
   const filteredVehicles = useMemo(() => {
-    return DataStore.getVehicles({
-      search: search || undefined,
-      make: selectedMake !== "all" ? selectedMake : undefined,
-      bodyType: selectedBodyType !== "all" ? selectedBodyType : undefined,
-      fuel: selectedFuel !== "all" ? selectedFuel : undefined,
-      transmission: selectedTransmission !== "all" ? selectedTransmission : undefined,
-      maxPrice: maxPrice < 5000000 ? maxPrice : undefined,
-      sortBy,
-    });
-  }, [search, selectedMake, selectedBodyType, selectedFuel, selectedTransmission, maxPrice, sortBy]);
+    let result = vehicles.filter((v) => v.status !== "DRAFT" && v.status !== "ARCHIVED");
+
+    if (search) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(
+        (v) =>
+          v.variant?.toLowerCase().includes(q) ||
+          v.make?.name?.toLowerCase().includes(q) ||
+          v.model?.name?.toLowerCase().includes(q) ||
+          v.color?.toLowerCase().includes(q) ||
+          v.year?.toString().includes(q) ||
+          v.registration_number?.toLowerCase().includes(q)
+      );
+    }
+
+    if (selectedMake !== "all") {
+      const mSlug = selectedMake.toLowerCase();
+      result = result.filter(
+        (v) =>
+          v.make?.slug?.toLowerCase() === mSlug ||
+          v.make?.name?.toLowerCase() === mSlug ||
+          v.make_id === selectedMake
+      );
+    }
+
+    if (selectedBodyType !== "all") {
+      result = result.filter((v) => v.body_type?.toUpperCase() === selectedBodyType.toUpperCase());
+    }
+
+    if (selectedFuel !== "all") {
+      result = result.filter((v) => v.fuel_type?.toUpperCase() === selectedFuel.toUpperCase());
+    }
+
+    if (selectedTransmission !== "all") {
+      result = result.filter((v) => v.transmission?.toUpperCase() === selectedTransmission.toUpperCase());
+    }
+
+    if (maxPrice < 5000000) {
+      result = result.filter((v) => v.price <= maxPrice);
+    }
+
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => b.year - a.year);
+        break;
+      case "price_asc":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price_desc":
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case "mileage_asc":
+        result.sort((a, b) => a.mileage - b.mileage);
+        break;
+    }
+
+    return result;
+  }, [vehicles, search, selectedMake, selectedBodyType, selectedFuel, selectedTransmission, maxPrice, sortBy]);
 
   const resetFilters = () => {
     setSearch("");

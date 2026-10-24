@@ -22,14 +22,14 @@ interface Agreement {
 }
 
 const RC_BADGE: Record<string, { label: string; className: string }> = {
-  PENDING:   { label: "RC Pending",  className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-  AT_RTO:    { label: "At RTO",      className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-  COMPLETED: { label: "RC Done",     className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+  PENDING: { label: "RC Pending", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  AT_RTO: { label: "At RTO", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  COMPLETED: { label: "RC Done", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
 };
 
 const DEED_BADGE: Record<string, { label: string; className: string }> = {
   PURCHASE: { label: "क्रय विलेख", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
-  SALE:     { label: "विक्रय विलेख", className: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
+  SALE: { label: "विक्रय विलेख", className: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
 };
 
 function formatINR(amount: number) {
@@ -74,7 +74,7 @@ export default function AdminDeedsPage() {
   }
 
   async function downloadCSV() {
-    const headers = ["Deed No","Type","Date","Party","Mobile","Reg. No.","Car","Price","RC Status"];
+    const headers = ["Deed No", "Type", "Date", "Party", "Mobile", "Reg. No.", "Car", "Price", "RC Status"];
     const rows = agreements.map(a => [
       a.deed_number, a.deed_type, a.deed_date, a.party_name, a.party_mobile,
       a.reg_number, a.make_model, a.total_price, a.rc_transfer_status
@@ -83,7 +83,7 @@ export default function AdminDeedsPage() {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
-    a.download = `NSCB-Deeds-${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `NSCB-Deeds-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
   }
 

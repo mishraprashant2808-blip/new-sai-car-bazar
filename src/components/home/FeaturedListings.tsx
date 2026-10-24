@@ -1,17 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Vehicle } from "@/types";
 import VehicleCard from "../ui/VehicleCard";
+import { DataStore } from "@/lib/data/store";
 
 interface FeaturedListingsProps {
   vehicles: Vehicle[];
 }
 
-export default function FeaturedListings({ vehicles }: FeaturedListingsProps) {
+export default function FeaturedListings({ vehicles: initialVehicles }: FeaturedListingsProps) {
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [activeTab, setActiveTab] = useState<'all' | 'featured' | 'new' | 'hot'>('all');
+
+  useEffect(() => {
+    const syncClientVehicles = () => {
+      const clientVehicles = DataStore.getVehicles();
+      if (clientVehicles && clientVehicles.length > 0) {
+        const initialIds = new Set(initialVehicles.map((v) => v.id));
+        const customOnes = clientVehicles.filter((v) => !initialIds.has(v.id));
+        if (customOnes.length > 0) {
+          setVehicles([...customOnes, ...initialVehicles]);
+        }
+      }
+    };
+
+    syncClientVehicles();
+    window.addEventListener("nscb-vehicles-updated", syncClientVehicles);
+    return () => window.removeEventListener("nscb-vehicles-updated", syncClientVehicles);
+  }, [initialVehicles]);
 
   const filteredVehicles = vehicles.filter((v) => {
     if (activeTab === 'featured') return v.is_featured;

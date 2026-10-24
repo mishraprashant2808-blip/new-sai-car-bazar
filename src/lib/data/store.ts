@@ -2,17 +2,11 @@ import { Vehicle, Make, Model, Lead, FinanceLead, SellCarRequest, SiteSettings, 
 import { INITIAL_VEHICLES, INITIAL_MAKES, INITIAL_MODELS, INITIAL_SITE_SETTINGS, INITIAL_LEADS, INITIAL_FINANCE_LEADS, INITIAL_SELL_CAR_REQUESTS, INITIAL_AGREEMENTS } from "./mockData";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAppropriateCarPhoto } from "@/lib/utils";
 
-// In-memory runtime cache for development & fallback when Supabase keys are pending
-let vehiclesCache: Vehicle[] = [...INITIAL_VEHICLES];
-let makesCache: Make[] = [...INITIAL_MAKES];
-let modelsCache: Model[] = [...INITIAL_MODELS];
-let siteSettingsCache: SiteSettings = { ...INITIAL_SITE_SETTINGS };
-let leadsCache: Lead[] = [...INITIAL_LEADS];
-let financeLeadsCache: FinanceLead[] = [...INITIAL_FINANCE_LEADS];
-let sellCarCache: SellCarRequest[] = [...INITIAL_SELL_CAR_REQUESTS];
 // Global singleton store for agreements across API routes and page requests
-const globalStore = globalThis as unknown as { __agreementsCache?: Agreement[] };
+const globalStore = globalThis as unknown as { __agreementsCache?: Agreement[]; __vehiclesCache?: Vehicle[] };
+
 if (!globalStore.__agreementsCache) {
   globalStore.__agreementsCache = [...INITIAL_AGREEMENTS];
 }
@@ -25,6 +19,54 @@ function getAgreementsCache(): Agreement[] {
 function setAgreementsCache(items: Agreement[]) {
   globalStore.__agreementsCache = items;
 }
+
+// Global & persistent vehicles store
+if (!globalStore.__vehiclesCache) {
+  globalStore.__vehiclesCache = [...INITIAL_VEHICLES];
+}
+
+function getVehiclesCache(): Vehicle[] {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("nscb_custom_vehicles");
+      if (stored) {
+        const parsed: Vehicle[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const customIds = new Set(parsed.map((p) => p.id));
+          const baseRemaining = INITIAL_VEHICLES.filter((v) => !customIds.has(v.id));
+          globalStore.__vehiclesCache = [...parsed, ...baseRemaining];
+          return globalStore.__vehiclesCache;
+        }
+      }
+    } catch {
+      // Ignore JSON error
+    }
+  }
+  if (!globalStore.__vehiclesCache || globalStore.__vehiclesCache.length === 0) {
+    globalStore.__vehiclesCache = [...INITIAL_VEHICLES];
+  }
+  return globalStore.__vehiclesCache;
+}
+
+function setVehiclesCache(items: Vehicle[]) {
+  globalStore.__vehiclesCache = items;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("nscb_custom_vehicles", JSON.stringify(items));
+      window.dispatchEvent(new Event("nscb-vehicles-updated"));
+    } catch {
+      // Ignore localStorage error
+    }
+  }
+}
+
+// In-memory runtime cache for development & fallback when Supabase keys are pending
+let makesCache: Make[] = [...INITIAL_MAKES];
+let modelsCache: Model[] = [...INITIAL_MODELS];
+let siteSettingsCache: SiteSettings = { ...INITIAL_SITE_SETTINGS };
+let leadsCache: Lead[] = [...INITIAL_LEADS];
+let financeLeadsCache: FinanceLead[] = [...INITIAL_FINANCE_LEADS];
+let sellCarCache: SellCarRequest[] = [...INITIAL_SELL_CAR_REQUESTS];
 
 export interface InventoryFilterParams {
   search?: string;
@@ -45,7 +87,7 @@ export interface InventoryFilterParams {
 export const DataStore = {
   // --- VEHICLES ---
   getVehicles(filters?: InventoryFilterParams): Vehicle[] {
-    let result = [...vehiclesCache];
+    let result = [...getVehiclesCache()];
 
     if (filters) {
       if (filters.status) {
@@ -143,14 +185,18 @@ export const DataStore = {
           .in('status', ['AVAILABLE', 'RESERVED', 'SOLD']);
 
         if (!error && data && data.length > 0) {
-          vehiclesCache = data as Vehicle[];
-          return vehiclesCache;
+          const list = getVehiclesCache();
+          const supabaseIds = new Set(data.map((d: any) => d.id));
+          const localOnly = list.filter(v => !supabaseIds.has(v.id));
+          const merged = [...(data as Vehicle[]), ...localOnly];
+          setVehiclesCache(merged);
+          return merged;
         }
       } catch (e) {
         console.error('Supabase fetchVehicles error:', e);
       }
     }
-    return [...vehiclesCache];
+    return [...getVehiclesCache()];
   },
 
   async fetchMakesLive(): Promise<Make[]> {
@@ -175,69 +221,107 @@ export const DataStore = {
   },
 
   getAllVehiclesAdmin(): Vehicle[] {
-    return [...vehiclesCache];
+    return [...getVehiclesCache()];
   },
 
   getVehicleBySlug(slug: string): Vehicle | undefined {
-    return vehiclesCache.find(v => v.slug === slug);
+    return getVehiclesCache().find(v => v.slug === slug);
   },
 
   getVehicleById(id: string): Vehicle | undefined {
-    return vehiclesCache.find(v => v.id === id || v.slug === id);
+    return getVehiclesCache().find(v => v.id === id || v.slug === id);
   },
 
   getFeaturedVehicles(): Vehicle[] {
-    return vehiclesCache.filter(v => v.is_featured && v.status === 'AVAILABLE');
+    return getVehiclesCache().filter(v => v.is_featured && v.status === 'AVAILABLE');
   },
 
   getNewArrivals(): Vehicle[] {
-    return vehiclesCache.filter(v => v.is_new_arrival && v.status === 'AVAILABLE');
+    return getVehiclesCache().filter(v => v.is_new_arrival && v.status === 'AVAILABLE');
   },
 
   getHotDeals(): Vehicle[] {
-    return vehiclesCache.filter(v => v.is_hot_deal && v.status === 'AVAILABLE');
+    return getVehiclesCache().filter(v => v.is_hot_deal && v.status === 'AVAILABLE');
   },
 
-  addVehicle(vehicle: Omit<Vehicle, 'id'> & { id?: string }): Vehicle {
+  addVehicle(vehicle: Omit<Vehicle, 'id'> & { id?: string; make_name?: string; model_name?: string; image_url?: string }): Vehicle {
+    const list = getVehiclesCache();
     const id = vehicle.id || `v-${Date.now()}`;
-    const make = makesCache.find(m => m.id === vehicle.make_id);
-    const model = modelsCache.find(m => m.id === vehicle.model_id);
+    const make = vehicle.make || makesCache.find(m => m.id === vehicle.make_id) || {
+      id: vehicle.make_id || 'm-custom',
+      name: (vehicle as any).make_name || 'Car',
+      slug: ((vehicle as any).make_name || 'car').toLowerCase().replace(/\s+/g, '-'),
+      is_active: true,
+      sort_order: 99
+    };
+    const model = vehicle.model || modelsCache.find(m => m.id === vehicle.model_id) || {
+      id: vehicle.model_id || 'mod-custom',
+      make_id: make.id,
+      name: (vehicle as any).model_name || vehicle.variant || 'Model',
+      slug: ((vehicle as any).model_name || vehicle.variant || 'model').toLowerCase().replace(/\s+/g, '-'),
+      is_active: true
+    };
+    
+    // Ensure appropriate car photo is assigned
+    let images = vehicle.images && vehicle.images.length > 0 ? [...vehicle.images] : [];
+    if (images.length === 0 || !images[0]?.image_url || images[0].image_url.includes("photo-1549399542-7e3f8b79c341")) {
+      const photo = getAppropriateCarPhoto(make.name, model.name, vehicle.body_type);
+      images = [
+        {
+          id: `img-${Date.now()}`,
+          vehicle_id: id,
+          storage_path: photo,
+          image_url: photo,
+          alt_text: `${make.name} ${model.name}`,
+          sort_order: 0,
+          is_primary: true
+        }
+      ];
+    }
     
     const newVehicle: Vehicle = {
       ...vehicle,
       id,
       make,
       model,
-      created_at: new Date().toISOString(),
+      images,
+      created_at: vehicle.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    vehiclesCache.unshift(newVehicle);
+    // Remove if already exists with same id or slug
+    const filtered = list.filter(v => v.id !== id && v.slug !== newVehicle.slug);
+    filtered.unshift(newVehicle);
+    setVehiclesCache(filtered);
     return newVehicle;
   },
 
   updateVehicle(id: string, updates: Partial<Vehicle>): Vehicle | undefined {
-    const idx = vehiclesCache.findIndex(v => v.id === id || v.slug === id);
+    const list = getVehiclesCache();
+    const idx = list.findIndex(v => v.id === id || v.slug === id);
     if (idx === -1) return undefined;
 
-    const make = updates.make_id ? makesCache.find(m => m.id === updates.make_id) : vehiclesCache[idx].make;
-    const model = updates.model_id ? modelsCache.find(m => m.id === updates.model_id) : vehiclesCache[idx].model;
+    const make = updates.make_id ? makesCache.find(m => m.id === updates.make_id) : list[idx].make;
+    const model = updates.model_id ? modelsCache.find(m => m.id === updates.model_id) : list[idx].model;
 
-    vehiclesCache[idx] = {
-      ...vehiclesCache[idx],
+    list[idx] = {
+      ...list[idx],
       ...updates,
       make,
       model,
       updated_at: new Date().toISOString(),
     };
 
-    return vehiclesCache[idx];
+    setVehiclesCache([...list]);
+    return list[idx];
   },
 
   deleteVehicle(id: string): boolean {
-    const initialLen = vehiclesCache.length;
-    vehiclesCache = vehiclesCache.filter(v => v.id !== id && v.slug !== id);
-    return vehiclesCache.length < initialLen;
+    const list = getVehiclesCache();
+    const initialLen = list.length;
+    const filtered = list.filter(v => v.id !== id && v.slug !== id);
+    setVehiclesCache(filtered);
+    return filtered.length < initialLen;
   },
 
   // --- MAKES & MODELS ---
@@ -427,7 +511,9 @@ export const DataStore = {
               id: `img-csv-${Date.now()}-${i}`,
               vehicle_id: `v-csv-${Date.now()}-${i}`,
               storage_path: 'csv-imports/car.webp',
-              image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80',
+              image_url: (rowData['image_url'] && !rowData['image_url'].includes('photo-1549399542-7e3f8b79c341'))
+                ? rowData['image_url']
+                : getAppropriateCarPhoto(makeName, modelName, body),
               alt_text: `${makeName} ${modelName}`,
               sort_order: 0,
               is_primary: true,
@@ -435,7 +521,8 @@ export const DataStore = {
           ]
         };
 
-        vehiclesCache.unshift(newCar);
+        const existing = getVehiclesCache();
+        setVehiclesCache([newCar, ...existing.filter(v => v.id !== newCar.id)]);
         validCount++;
       } catch (err: any) {
         failedCount++;
