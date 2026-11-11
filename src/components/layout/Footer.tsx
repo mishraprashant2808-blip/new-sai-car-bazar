@@ -156,6 +156,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/install" className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1.5 transition">
+                  <span>📱 Install App (iPhone & Android)</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/terms" className="hover:text-[#ED0000] transition">
                   Terms & Conditions
                 </Link>
