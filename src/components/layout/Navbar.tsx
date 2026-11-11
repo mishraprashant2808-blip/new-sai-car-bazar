@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, Car, Shield, Calculator, Tag, Info, PhoneCall } from "lucide-react";
+import { Menu, X, ChevronDown, Car, Shield, Calculator, Tag, Info, PhoneCall, Download } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -119,6 +119,17 @@ export default function Navbar() {
             >
               Browse Complete Inventory
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                window.dispatchEvent(new Event("nscb-trigger-pwa-install"));
+              }}
+              className="w-full text-center bg-[#162032] hover:bg-[#1E293B] text-slate-200 border border-[#273549] font-semibold py-2.5 rounded text-xs mt-2 flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-[#ED0000]" />
+              <span>Install Sai Car Bazar App</span>
+            </button>
           </div>
         </div>
       )}

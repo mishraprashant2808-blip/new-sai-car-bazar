@@ -1,21 +1,53 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { WishlistProvider } from "@/context/WishlistContext";
 import AppLayout from "@/components/layout/AppLayout";
 import Analytics from "@/components/common/Analytics";
 
+export const viewport: Viewport = {
+  themeColor: "#ED0000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "New Sai Car Bazar | Certified Pre-Owned Cars in Barabanki, UP",
   description: "Browse thoroughly inspected quality used cars at New Sai Car Bazar, Barabanki. Transparent pricing, full vehicle history, flexible low-rate finance, and instant WhatsApp support.",
   keywords: ["Used Cars Barabanki", "Second Hand Car Barabanki", "New Sai Car Bazar", "Buy Used Car Lucknow UP", "Pre Owned Car Loan"],
+  manifest: "/manifest.webmanifest",
+  applicationName: "Sai Car Bazar",
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      {
+        rel: "mask-icon",
+        url: "/icon.svg",
+        color: "#ED0000",
+      },
+    ],
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Sai Car Bazar",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#0F172A",
+    "msapplication-tap-highlight": "no",
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "de7ac1acede14736",

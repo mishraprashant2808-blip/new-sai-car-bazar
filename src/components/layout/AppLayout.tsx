@@ -8,6 +8,9 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WishlistDrawer from "../wishlist/WishlistDrawer";
 import FloatingWhatsApp from "../common/FloatingWhatsApp";
+import MobileBottomNav from "../pwa/MobileBottomNav";
+import PwaInstallPrompt from "../pwa/PwaInstallPrompt";
+import ServiceWorkerRegister from "../pwa/ServiceWorkerRegister";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,7 +19,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isAdmin) {
     // Admin routes handle their own layout
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <ServiceWorkerRegister />
+      </>
+    );
   }
 
   return (
@@ -25,13 +33,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <MainHeader onOpenWishlist={() => setWishlistOpen(true)} />
       <Navbar />
       
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         {children}
       </main>
 
       <Footer />
       <WishlistDrawer isOpen={wishlistOpen} onClose={() => setWishlistOpen(false)} />
       <FloatingWhatsApp />
+      <MobileBottomNav />
+      <PwaInstallPrompt />
+      <ServiceWorkerRegister />
     </div>
   );
 }

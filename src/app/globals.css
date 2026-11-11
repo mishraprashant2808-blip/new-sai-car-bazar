@@ -16,6 +16,16 @@ body {
   background: var(--background);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Standalone PWA Safe Areas */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {
