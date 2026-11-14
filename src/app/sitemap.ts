@@ -44,6 +44,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/track-rc`,
+      lastModified: currentDate,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
   ];
 
   // Dynamic Vehicle Listings from Supabase or DataStore
