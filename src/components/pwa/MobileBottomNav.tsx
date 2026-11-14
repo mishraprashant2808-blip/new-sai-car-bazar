@@ -100,17 +100,6 @@ export default function MobileBottomNav() {
                 <MessageCircle className="w-4 h-4" />
                 <span>Chat on WhatsApp (+91 8172946630)</span>
               </a>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setContactSheetOpen(false);
-                  window.dispatchEvent(new Event("nscb-trigger-pwa-install"));
-                }}
-                className="w-full bg-[#0F1827] hover:bg-[#1A263A] border border-[#273549] text-slate-200 font-semibold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2"
-              >
-                <span>Install Sai Car Bazar App on this Phone</span>
-              </button>
             </div>
           </div>
         </div>

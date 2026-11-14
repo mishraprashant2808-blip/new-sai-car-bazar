@@ -9,7 +9,6 @@ import Footer from "./Footer";
 import WishlistDrawer from "../wishlist/WishlistDrawer";
 import FloatingWhatsApp from "../common/FloatingWhatsApp";
 import MobileBottomNav from "../pwa/MobileBottomNav";
-import PwaInstallPrompt from "../pwa/PwaInstallPrompt";
 import ServiceWorkerRegister from "../pwa/ServiceWorkerRegister";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +40,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <WishlistDrawer isOpen={wishlistOpen} onClose={() => setWishlistOpen(false)} />
       <FloatingWhatsApp />
       <MobileBottomNav />
-      <PwaInstallPrompt />
       <ServiceWorkerRegister />
     </div>
   );
