@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
+import { numberToHindiWords } from "@/lib/hindiNumbers";
 
 function getClient() {
   return supabaseAdmin || supabase;
@@ -55,6 +56,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    if (!body.total_price_words && body.total_price) {
+      body.total_price_words = numberToHindiWords(Number(body.total_price));
+    }
 
     const client = getClient();
     if (client) {

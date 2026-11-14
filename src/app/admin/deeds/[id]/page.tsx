@@ -7,6 +7,7 @@ import {
   ArrowLeft, Printer, Car, User, CreditCard, Clock, CheckCircle2,
   AlertCircle, Edit, Trash2, FileText
 } from "lucide-react";
+import { numberToHindiWords } from "@/lib/hindiNumbers";
 
 interface Agreement {
   id: string;
@@ -183,7 +184,7 @@ export default function DeedDetailPage() {
             <div className="font-black text-white text-2xl">
               ₹{data.total_price?.toLocaleString("en-IN")}
             </div>
-            <div className="text-slate-400 text-xs mt-1">{data.total_price_words}</div>
+            <div className="text-slate-400 text-xs mt-1">{data.total_price_words || (data.total_price ? numberToHindiWords(data.total_price) : "")}</div>
             <div className="text-slate-500 text-xs mt-0.5">{data.payment_mode_1}</div>
           </div>
         </div>

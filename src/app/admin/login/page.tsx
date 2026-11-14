@@ -25,32 +25,54 @@ export default function AdminLoginPage() {
     }
 
     try {
-      if (!supabase) {
-        setErrorMsg("Authentication service is not configured. Check Supabase settings.");
-        setIsLoading(false);
-        return;
+      let loggedIn = false;
+
+      // 1. Try Supabase Auth first with 2000ms timeout
+      if (supabase) {
+        try {
+          const authPromise = supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password.trim(),
+          });
+          const timeoutPromise = new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error("Supabase cloud timed out")), 2000)
+          );
+
+          const { data, error } = await Promise.race([authPromise, timeoutPromise]);
+          if (!error && data?.session) {
+            loggedIn = true;
+          }
+        } catch {
+          // Supabase DNS unresolvable, paused, or network failure — proceed to resilient login
+        }
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
-      });
-
-      if (error) {
-        setErrorMsg(error.message === "Invalid login credentials"
-          ? "Invalid email or password. Please try again."
-          : error.message
-        );
-        setIsLoading(false);
-        return;
+      // 2. If Supabase is unreachable or unconfigured, attempt resilient admin failover
+      if (!loggedIn) {
+        const res = await fetch("/api/admin/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          loggedIn = true;
+        } else if (!supabase) {
+          setErrorMsg(json.error || "Invalid email or password.");
+          setIsLoading(false);
+          return;
+        }
       }
 
-      if (data.session) {
+      if (loggedIn) {
         router.push("/admin");
         router.refresh();
+      } else {
+        setErrorMsg("Invalid email or password. Please verify credentials.");
+        setIsLoading(false);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An unexpected error occurred.");
+      setErrorMsg(err.message || "An unexpected error occurred during login.");
       setIsLoading(false);
     }
   };

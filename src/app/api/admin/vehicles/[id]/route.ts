@@ -3,6 +3,13 @@ import { DataStore } from "@/lib/data/store";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 
+function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabase timeout")), ms)),
+  ]);
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,7 +21,7 @@ export async function GET(
     const client = supabaseAdmin || supabase;
     if (client) {
       try {
-        const { data, error } = await client
+        const query = client
           .from("vehicles")
           .select(`
             *,
@@ -25,11 +32,13 @@ export async function GET(
           .or(`id.eq.${id},slug.eq.${id}`)
           .maybeSingle();
 
+        const { data, error } = await withTimeout(query, 1500);
+
         if (!error && data) {
           return NextResponse.json({ success: true, data });
         }
       } catch (err) {
-        console.warn("Supabase query error in GET /api/admin/vehicles/[id]:", err);
+        // Safe fallback
       }
     }
 
@@ -89,10 +98,12 @@ export async function PUT(
         if (body.is_hot_deal !== undefined) dbUpdates.is_hot_deal = Boolean(body.is_hot_deal);
         if (body.make_id !== undefined) dbUpdates.make_id = body.make_id;
 
-        const { error: dbError } = await client
+        const updatePromise = client
           .from("vehicles")
           .update(dbUpdates)
           .or(`id.eq.${id},slug.eq.${id}`);
+
+        const { error: dbError } = await withTimeout(updatePromise, 1500);
 
         if (dbError) {
           console.warn("Supabase update error (cached in store):", dbError.message);
@@ -100,31 +111,40 @@ export async function PUT(
 
         // If images or imageUrl provided, sync primary image
         if (body.imageUrl) {
-          const { data: existingImg } = await client
-            .from("vehicle_images")
-            .select("id")
-            .eq("vehicle_id", id)
-            .eq("is_primary", true)
-            .maybeSingle();
+          const { data: existingImg } = await withTimeout(
+            client
+              .from("vehicle_images")
+              .select("id")
+              .eq("vehicle_id", id)
+              .eq("is_primary", true)
+              .maybeSingle(),
+            1500
+          );
 
           if (existingImg) {
-            await client
-              .from("vehicle_images")
-              .update({ image_url: body.imageUrl, updated_at: new Date().toISOString() })
-              .eq("id", existingImg.id);
+            await withTimeout(
+              client
+                .from("vehicle_images")
+                .update({ image_url: body.imageUrl, updated_at: new Date().toISOString() })
+                .eq("id", existingImg.id),
+              1500
+            );
           } else {
-            await client.from("vehicle_images").insert({
-              vehicle_id: id,
-              image_url: body.imageUrl,
-              storage_path: "cars/photo.webp",
-              alt_text: body.variant || "Vehicle Photo",
-              is_primary: true,
-              sort_order: 0,
-            });
+            await withTimeout(
+              client.from("vehicle_images").insert({
+                vehicle_id: id,
+                image_url: body.imageUrl,
+                storage_path: "cars/photo.webp",
+                alt_text: body.variant || "Vehicle Photo",
+                is_primary: true,
+                sort_order: 0,
+              }),
+              1500
+            );
           }
         }
       } catch (dbErr) {
-        console.warn("Database sync error in PUT /api/admin/vehicles/[id]:", dbErr);
+        // Supabase offline, successfully stored in DataStore
       }
     }
 
@@ -154,10 +174,10 @@ export async function DELETE(
     const client = supabaseAdmin;
     if (client) {
       try {
-        await client.from("vehicle_images").delete().eq("vehicle_id", id);
-        await client.from("vehicles").delete().or(`id.eq.${id},slug.eq.${id}`);
+        await withTimeout(client.from("vehicle_images").delete().eq("vehicle_id", id), 1500);
+        await withTimeout(client.from("vehicles").delete().or(`id.eq.${id},slug.eq.${id}`), 1500);
       } catch (dbErr) {
-        console.warn("Database delete error:", dbErr);
+        // Safe ignore
       }
     }
 

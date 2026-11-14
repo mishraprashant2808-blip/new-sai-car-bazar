@@ -26,39 +26,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
 
-  // Check Supabase session on mount and route changes
+  // Check authentication on mount and route changes (Dual Engine: Resilient Session + Supabase)
   useEffect(() => {
     if (pathname === "/admin/login") {
       setIsAuthenticated(true);
       return;
     }
 
-    if (!supabase) {
-      router.push("/admin/login");
-      return;
+    let isMounted = true;
+
+    async function checkAuth() {
+      // 1. Check server-verified resilient session
+      try {
+        const res = await fetch("/api/admin/auth/session");
+        const json = await res.json();
+        if (json.authenticated && isMounted) {
+          setIsAuthenticated(true);
+          setAdminEmail(json.email || "Admin");
+          return;
+        }
+      } catch {
+        // Fall through to Supabase check
+      }
+
+      // 2. Fallback to client-side Supabase if configured & active
+      if (supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && isMounted) {
+            setIsAuthenticated(true);
+            setAdminEmail(session.user.email || "Admin");
+            return;
+          }
+        } catch {
+          // Supabase offline
+        }
+      }
+
+      // 3. Not authenticated
+      if (isMounted) {
+        setIsAuthenticated(false);
+        router.push("/admin/login");
+      }
     }
 
-    // Get current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push("/admin/login");
-      } else {
-        setIsAuthenticated(true);
-        setAdminEmail(session.user.email || "");
-      }
-    });
+    checkAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push("/admin/login");
-      } else {
-        setIsAuthenticated(true);
-        setAdminEmail(session.user.email || "");
+    // Listen for auth state changes if Supabase is present
+    let unsubscribe = () => {};
+    if (supabase) {
+      try {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (session && isMounted) {
+            setIsAuthenticated(true);
+            setAdminEmail(session.user.email || "");
+          }
+        });
+        unsubscribe = () => subscription.unsubscribe();
+      } catch {
+        // Safe ignore
       }
-    });
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [pathname, router]);
 
   const handleLogout = async () => {

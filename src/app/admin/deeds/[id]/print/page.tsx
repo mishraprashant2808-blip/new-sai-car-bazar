@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Printer, ArrowLeft } from "lucide-react";
+import { numberToHindiWords } from "@/lib/hindiNumbers";
 
 interface Agreement {
   id: string;
@@ -289,7 +290,7 @@ export default function PrintDeedPage() {
         <table className="w-full border-collapse border-t-0 text-black">
           <tbody>
             <Row label={`कुल ${isSale ? "विक्रय" : "क्रय"} मूल्य (अंकों में)`} value={formatINR(data.total_price)} />
-            <Row label="कुल मूल्य (शब्दों में)" value={data.total_price_words} />
+            <Row label="कुल मूल्य (शब्दों में)" value={data.total_price_words || (data.total_price ? numberToHindiWords(data.total_price) : "")} />
             {isSale && data.advance_amount > 0 && (
               <Row label="अग्रिम राशि एवं रसीद नं." value={`${formatINR(data.advance_amount)}  —  ${data.advance_receipt_no || ""}`} />
             )}

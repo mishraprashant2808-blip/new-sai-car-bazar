@@ -1,0 +1,81 @@
+const SESSION_COOKIE_NAME = "nscb_admin_session";
+const SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || "nscb-resilient-admin-secret-2025";
+const DEFAULT_ADMIN_EMAIL = process.env.NEXT_PUBLIC_DEALER_EMAIL || "mishraprashant2808@gmail.com";
+
+export interface AdminSession {
+  email: string;
+  role: "admin";
+  issuedAt: number;
+  expiresAt: number;
+}
+
+function base64UrlEncode(str: string): string {
+  if (typeof btoa === "function") {
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  return Buffer.from(str).toString("base64url");
+}
+
+function base64UrlDecode(str: string): string {
+  if (typeof atob === "function") {
+    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    return atob(base64);
+  }
+  return Buffer.from(str, "base64url").toString("utf-8");
+}
+
+async function signData(message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+  const bytes = new Uint8Array(signature);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return base64UrlEncode(binary);
+}
+
+export async function createAdminToken(email: string): Promise<string> {
+  const payload: AdminSession = {
+    email: email.trim().toLowerCase(),
+    role: "admin",
+    issuedAt: Date.now(),
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const signature = await signData(encodedPayload);
+  return `${encodedPayload}.${signature}`;
+}
+
+export async function verifyAdminToken(token?: string | null): Promise<AdminSession | null> {
+  if (!token || typeof token !== "string") return null;
+
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+
+  const [encodedPayload, signature] = parts;
+  const expectedSig = await signData(encodedPayload);
+
+  if (signature !== expectedSig) return null;
+
+  try {
+    const jsonStr = base64UrlDecode(encodedPayload);
+    const json = JSON.parse(jsonStr);
+    if (json.role !== "admin" || !json.expiresAt || json.expiresAt < Date.now()) {
+      return null;
+    }
+    return json as AdminSession;
+  } catch {
+    return null;
+  }
+}
+
+export { SESSION_COOKIE_NAME, DEFAULT_ADMIN_EMAIL };

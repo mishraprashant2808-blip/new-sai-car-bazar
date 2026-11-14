@@ -5,24 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FileText, ArrowLeft, Save, AlertCircle, Car, User, CreditCard,
-  IndianRupee, Users
+  IndianRupee, Users, Sparkles, RefreshCw
 } from "lucide-react";
-
-// ─── Helper: Convert number to Hindi words ────────────────────────────────────
-const ONES = ["", "एक", "दो", "तीन", "चार", "पाँच", "छः", "सात", "आठ", "नौ",
-  "दस", "ग्यारह", "बारह", "तेरह", "चौदह", "पंद्रह", "सोलह", "सत्रह", "अठारह", "उन्नीस"];
-const TENS = ["", "", "बीस", "तीस", "चालीस", "पचास", "साठ", "सत्तर", "अस्सी", "नब्बे"];
-
-function toHindiWords(n: number): string {
-  if (n === 0) return "शून्य";
-  if (n < 0) return "ऋण " + toHindiWords(-n);
-  if (n < 20) return ONES[n];
-  if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
-  if (n < 1000) return ONES[Math.floor(n / 100)] + " सौ" + (n % 100 ? " " + toHindiWords(n % 100) : "");
-  if (n < 100000) return toHindiWords(Math.floor(n / 1000)) + " हज़ार" + (n % 1000 ? " " + toHindiWords(n % 1000) : "");
-  if (n < 10000000) return toHindiWords(Math.floor(n / 100000)) + " लाख" + (n % 100000 ? " " + toHindiWords(n % 100000) : "");
-  return toHindiWords(Math.floor(n / 10000000)) + " करोड़" + (n % 10000000 ? " " + toHindiWords(n % 10000000) : "");
-}
+import { numberToHindiWords } from "@/lib/hindiNumbers";
 
 const FIELD_CLASS = "w-full bg-[#0E1828] border border-[#273549] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ED0000] placeholder:text-slate-500 transition";
 const LABEL_CLASS = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide";
@@ -74,6 +59,7 @@ export default function NewDeedPage() {
 
     // Financial
     total_price: "",
+    total_price_words: "",
     advance_amount: "",
     advance_receipt_no: "",
     payment_mode_1: "CASH",
@@ -88,12 +74,21 @@ export default function NewDeedPage() {
     notes: "",
   });
 
-  const set = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
+  const set = (field: string, value: string) => {
+    setForm(f => {
+      const next = { ...f, [field]: value };
+      if (field === "total_price") {
+        const val = parseInt(value) || 0;
+        next.total_price_words = val > 0 ? numberToHindiWords(val) : "";
+      }
+      return next;
+    });
+  };
 
   const totalPrice = parseInt(form.total_price) || 0;
   const advance = parseInt(form.advance_amount) || 0;
   const balance = Math.max(0, totalPrice - advance);
-  const priceWords = totalPrice > 0 ? `रुपये ${toHindiWords(totalPrice)} मात्र` : "";
+  const activePriceWords = form.total_price_words || (totalPrice > 0 ? numberToHindiWords(totalPrice) : "");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,7 +105,7 @@ export default function NewDeedPage() {
         reg_year: form.reg_year ? parseInt(form.reg_year) : null,
         odometer_reading: form.odometer_reading ? parseInt(form.odometer_reading) : null,
         total_price: totalPrice,
-        total_price_words: priceWords,
+        total_price_words: activePriceWords,
         advance_amount: advance,
         balance_amount: balance,
       };
@@ -290,9 +285,30 @@ export default function NewDeedPage() {
               <input type="number" value={form.total_price} onChange={e => set("total_price", e.target.value)} placeholder="650000" className={FIELD_CLASS} required />
             </FormField>
             <div>
-              <label className={LABEL_CLASS}>मूल्य शब्दों में</label>
-              <div className="bg-[#0A1520] border border-[#1E2D42] rounded-xl px-4 py-2.5 text-sm text-amber-300 font-medium min-h-[42px]">
-                {priceWords || <span className="text-slate-500 italic">कुल मूल्य दर्ज करने पर auto-fill</span>}
+              <div className="flex items-center justify-between mb-1.5">
+                <label className={LABEL_CLASS}>मूल्य शब्दों में (Hindi Words)</label>
+                <span className="text-[10px] text-amber-400/90 font-medium flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                  <Sparkles className="w-3 h-3" /> ऑटो-अनुवाद
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.total_price_words || activePriceWords}
+                  onChange={e => setForm(f => ({ ...f, total_price_words: e.target.value }))}
+                  placeholder="रुपये ... मात्र (कुल मूल्य दर्ज करने पर स्वतः दर्ज होगा)"
+                  className={`${FIELD_CLASS} pr-10 text-amber-300 font-medium`}
+                />
+                {totalPrice > 0 && (
+                  <button
+                    type="button"
+                    title="री-कन्वर्ट करें (Re-convert to Hindi)"
+                    onClick={() => setForm(f => ({ ...f, total_price_words: numberToHindiWords(totalPrice) }))}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white transition p-1"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
             <FormField label="अग्रिम राशि / Advance (₹)">

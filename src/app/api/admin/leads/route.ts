@@ -4,27 +4,41 @@ import { DataStore } from "@/lib/data/store";
 
 export const dynamic = "force-dynamic";
 
+function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabase timeout")), ms)),
+  ]);
+}
+
 export async function GET() {
   try {
     if (supabaseAdmin) {
-      const [leadsRes, financeRes, sellRes] = await Promise.all([
-        supabaseAdmin.from("leads").select("*, vehicle:vehicles(slug, variant)").order("created_at", { ascending: false }),
-        supabaseAdmin.from("finance_leads").select("*, vehicle:vehicles(slug, variant)").order("created_at", { ascending: false }),
-        supabaseAdmin.from("sell_car_requests").select("*").order("created_at", { ascending: false }),
-      ]);
+      try {
+        const [leadsRes, financeRes, sellRes] = await withTimeout(
+          Promise.all([
+            supabaseAdmin.from("leads").select("*, vehicle:vehicles(slug, variant)").order("created_at", { ascending: false }),
+            supabaseAdmin.from("finance_leads").select("*, vehicle:vehicles(slug, variant)").order("created_at", { ascending: false }),
+            supabaseAdmin.from("sell_car_requests").select("*").order("created_at", { ascending: false }),
+          ]),
+          1500
+        );
 
-      const leads = leadsRes.data || DataStore.getLeads();
-      const financeLeads = financeRes.data || DataStore.getFinanceLeads();
-      const sellRequests = sellRes.data || DataStore.getSellCarRequests();
+        const leads = leadsRes.data || DataStore.getLeads();
+        const financeLeads = financeRes.data || DataStore.getFinanceLeads();
+        const sellRequests = sellRes.data || DataStore.getSellCarRequests();
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          leads,
-          financeLeads,
-          sellRequests,
-        },
-      });
+        return NextResponse.json({
+          success: true,
+          data: {
+            leads,
+            financeLeads,
+            sellRequests,
+          },
+        });
+      } catch {
+        // Fallback to DataStore when Supabase cloud is unreachable
+      }
     }
 
     return NextResponse.json({
@@ -64,13 +78,16 @@ export async function PATCH(req: Request) {
       if (type === "finance") table = "finance_leads";
       if (type === "sellCar") table = "sell_car_requests";
 
-      const { error } = await supabaseAdmin
-        .from(table)
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq("id", id);
-
-      if (error) {
-        console.error(`Failed to update ${table} in Supabase:`, error);
+      try {
+        await withTimeout(
+          supabaseAdmin
+            .from(table)
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq("id", id),
+          1500
+        );
+      } catch {
+        // Safe ignore
       }
     }
 

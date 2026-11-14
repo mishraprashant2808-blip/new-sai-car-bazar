@@ -4,6 +4,13 @@ import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
 import { financeLeadSchema } from "@/lib/validation/finance";
 
+function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabase timeout")), ms)),
+  ]);
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -17,52 +24,51 @@ export async function POST(req: Request) {
     }
 
     const leadData = validation.data;
-    const client = supabaseAdmin || supabase;
-
-    if (client) {
-      const { data, error } = await client
-        .from("finance_leads")
-        .insert([
-          {
-            name: leadData.name,
-            phone: leadData.phone,
-            email: leadData.email || null,
-            vehicle_id: leadData.vehicle_id || null,
-            vehicle_price: leadData.vehicle_price,
-            loan_amount: leadData.loan_amount,
-            down_payment: leadData.down_payment,
-            interest_rate: leadData.interest_rate,
-            tenure: leadData.tenure,
-            estimated_emi: leadData.estimated_emi,
-            employment_type: leadData.employment_type || null,
-            monthly_income: leadData.monthly_income || null,
-            message: leadData.message || null,
-            status: "NEW",
-          },
-        ])
-        .select()
-        .single();
-
     const cleanLeadData = {
       ...leadData,
       estimated_emi: leadData.estimated_emi || 0,
     };
 
-    if (error) {
-      console.error("Supabase finance lead error:", error);
-      DataStore.createFinanceLead(cleanLeadData);
-    } else {
-      DataStore.createFinanceLead(cleanLeadData);
-      return NextResponse.json({ success: true, data });
-    }
-  } else {
-    DataStore.createFinanceLead({
-      ...leadData,
-      estimated_emi: leadData.estimated_emi || 0,
-    });
-  }
+    const client = supabaseAdmin || supabase;
 
-    return NextResponse.json({ success: true, message: "Finance application submitted" });
+    if (client) {
+      try {
+        const insertPromise = client
+          .from("finance_leads")
+          .insert([
+            {
+              name: leadData.name,
+              phone: leadData.phone,
+              email: leadData.email || null,
+              vehicle_id: leadData.vehicle_id || null,
+              vehicle_price: leadData.vehicle_price,
+              loan_amount: leadData.loan_amount,
+              down_payment: leadData.down_payment,
+              interest_rate: leadData.interest_rate,
+              tenure: leadData.tenure,
+              estimated_emi: leadData.estimated_emi,
+              employment_type: leadData.employment_type || null,
+              monthly_income: leadData.monthly_income || null,
+              message: leadData.message || null,
+              status: "NEW",
+            },
+          ])
+          .select()
+          .single();
+
+        const { data, error } = await withTimeout(insertPromise, 1500);
+
+        if (!error && data) {
+          DataStore.createFinanceLead(cleanLeadData);
+          return NextResponse.json({ success: true, data });
+        }
+      } catch {
+        // Fallback to DataStore when Supabase cloud is unreachable
+      }
+    }
+
+    DataStore.createFinanceLead(cleanLeadData);
+    return NextResponse.json({ success: true, message: "Finance inquiry submitted successfully" });
   } catch (err: any) {
     console.error("Finance API error:", err);
     return NextResponse.json(
