@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DataStore } from "@/lib/data/store";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
   return Promise.race([
@@ -64,6 +65,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await requireAdminAuth(request))) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -161,9 +166,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await requireAdminAuth(request))) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 

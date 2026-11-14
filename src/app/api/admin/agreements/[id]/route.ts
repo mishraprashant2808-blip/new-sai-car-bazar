@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 function getClient() {
   return supabaseAdmin || supabase;
@@ -14,7 +15,11 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 1200): Promise<T> {
   ]);
 }
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   const { id } = await params;
   const client = getClient();
   if (client) {
@@ -40,6 +45,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   const { id } = await params;
   const body = await req.json();
 
@@ -68,7 +77,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json({ data: updated });
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const client = getClient();

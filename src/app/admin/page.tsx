@@ -27,10 +27,31 @@ export default function AdminDashboardPage() {
   const [sellCarCount, setSellCarCount] = useState(0);
 
   useEffect(() => {
-    setVehicles(DataStore.getAllVehiclesAdmin());
-    setLeads(DataStore.getLeads());
-    setFinanceCount(DataStore.getFinanceLeads().length);
-    setSellCarCount(DataStore.getSellCarRequests().length);
+    async function loadDashboardData() {
+      try {
+        // Fetch vehicles
+        const vRes = await fetch("/api/admin/vehicles");
+        const vJson = await vRes.json();
+        if (vJson.success && vJson.data) {
+          setVehicles(vJson.data);
+        } else {
+          setVehicles(DataStore.getAllVehiclesAdmin());
+        }
+
+        // Fetch leads securely via authenticated API
+        const lRes = await fetch("/api/admin/leads");
+        const lJson = await lRes.json();
+        if (lJson.success && lJson.data) {
+          setLeads(lJson.data.leads || []);
+          setFinanceCount((lJson.data.financeLeads || []).length);
+          setSellCarCount((lJson.data.sellRequests || []).length);
+        }
+      } catch (err) {
+        console.error("Dashboard data load error:", err);
+      }
+    }
+
+    loadDashboardData();
   }, []);
 
   const totalVehicles = vehicles.length;

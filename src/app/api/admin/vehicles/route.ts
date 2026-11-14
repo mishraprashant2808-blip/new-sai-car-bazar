@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
 import { getAppropriateCarPhoto } from "@/lib/utils";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 function getClient() {
   return supabaseAdmin || supabase;
@@ -17,6 +18,10 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
 
 // GET /api/admin/vehicles - list all vehicles
 export async function GET(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || undefined;
   const search = searchParams.get("search") || undefined;
@@ -52,6 +57,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/vehicles - add a new vehicle
 export async function POST(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
 

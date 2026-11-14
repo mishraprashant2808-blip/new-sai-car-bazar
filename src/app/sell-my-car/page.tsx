@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Car, Upload, CheckCircle2, Send, ShieldCheck, DollarSign, Clock, HelpCircle } from "lucide-react";
+import { Car, Upload, CheckCircle2, Send, ShieldCheck, DollarSign, Clock, HelpCircle, MessageSquare } from "lucide-react";
 import { DataStore } from "@/lib/data/store";
 import { sellCarSchema } from "@/lib/validation/sell-car";
 
@@ -22,6 +22,7 @@ export default function SellMyCarPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +77,7 @@ export default function SellMyCarPage() {
         throw new Error(resData.error || "Failed to submit");
       }
 
+      setWhatsappUrl(resData.whatsappUrl || "");
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
@@ -140,9 +142,25 @@ export default function SellMyCarPage() {
               <p className="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
                 Thank you <strong>{name}</strong>. Our vehicle acquisition specialist at New Sai Car Bazar will call you on <strong>{phone}</strong> to confirm your vehicle evaluation appointment.
               </p>
+              {whatsappUrl && (
+                <div className="pt-2 max-w-sm mx-auto">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-900/30"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-white" />
+                    <span>Send Car Photos on Showroom WhatsApp</span>
+                  </a>
+                  <p className="text-[11px] text-slate-400 mt-2">
+                    Share vehicle pictures directly for a faster cash offer
+                  </p>
+                </div>
+              )}
               <button
                 onClick={() => setIsSuccess(false)}
-                className="mt-6 bg-[#ED0000] hover:bg-[#D10000] text-white text-xs font-bold px-6 py-2.5 rounded-lg transition"
+                className="mt-4 bg-[#ED0000] hover:bg-[#D10000] text-white text-xs font-bold px-6 py-2.5 rounded-lg transition"
               >
                 Submit Another Vehicle
               </button>

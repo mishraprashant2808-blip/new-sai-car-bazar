@@ -23,6 +23,7 @@ export default function EnquiryModal({ vehicle, isOpen, onClose }: EnquiryModalP
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   if (!isOpen) return null;
@@ -65,11 +66,8 @@ export default function EnquiryModal({ vehicle, isOpen, onClose }: EnquiryModalP
         throw new Error(resData.error || "Failed to submit");
       }
 
+      setWhatsappUrl(resData.whatsappUrl || "");
       setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        onClose();
-      }, 3000);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to submit enquiry. Please call us directly.");
     } finally {
@@ -89,14 +87,38 @@ export default function EnquiryModal({ vehicle, isOpen, onClose }: EnquiryModalP
         </button>
 
         {isSuccess ? (
-          <div className="py-8 text-center space-y-4">
+          <div className="py-6 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <h3 className="text-xl font-bold text-white">Enquiry Received!</h3>
             <p className="text-sm text-slate-300 max-w-sm mx-auto leading-relaxed">
-              Thank you {name}. Our sales manager at New Sai Car Bazar will call you shortly on <strong>{phone}</strong> to schedule your test drive.
+              Thank you {name}. Our sales team at New Sai Car Bazar has recorded your enquiry for <strong>{phone}</strong>.
             </p>
+
+            {whatsappUrl && (
+              <div className="pt-2">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-900/30"
+                >
+                  <MessageSquare className="w-4 h-4 fill-white" />
+                  Chat Directly on WhatsApp (Instant Response)
+                </a>
+                <p className="text-[11px] text-slate-400 mt-2">
+                  Connect immediately with our manager on showroom WhatsApp
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={onClose}
+              className="mt-2 text-xs text-slate-400 hover:text-white underline transition"
+            >
+              Done & Close
+            </button>
           </div>
         ) : (
           <div>

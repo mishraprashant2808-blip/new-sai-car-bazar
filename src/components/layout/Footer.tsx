@@ -127,6 +127,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/track-rc" className="text-amber-400 hover:text-white transition font-medium flex items-center gap-1.5">
+                  <span>Track RC Transfer</span>
+                  <span className="text-[9px] bg-amber-500/20 px-1 rounded text-amber-300">Live</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/inventory" className="hover:text-[#ED0000] transition">
                   Browse Inventory
                 </Link>

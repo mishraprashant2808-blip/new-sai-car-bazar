@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Calculator, ShieldCheck, BadgePercent, CheckCircle2, Send, ArrowRight, HelpCircle } from "lucide-react";
+import { Calculator, ShieldCheck, BadgePercent, CheckCircle2, Send, ArrowRight, HelpCircle, MessageSquare } from "lucide-react";
 import { calculateEMI, formatPriceINR } from "@/lib/utils";
 import { DataStore } from "@/lib/data/store";
 import { financeLeadSchema } from "@/lib/validation/finance";
@@ -27,6 +27,7 @@ function FinanceCalculatorContent() {
   const [formMsg, setFormMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -94,8 +95,8 @@ function FinanceCalculatorContent() {
         throw new Error(resData.error || "Failed to submit");
       }
 
+      setWhatsappUrl(resData.whatsappUrl || "");
       setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 5000);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to submit finance application. Please contact our showroom directly.");
     } finally {
@@ -313,7 +314,7 @@ function FinanceCalculatorContent() {
           </div>
 
           {isSuccess ? (
-            <div className="py-12 text-center space-y-3">
+            <div className="py-12 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
@@ -321,6 +322,22 @@ function FinanceCalculatorContent() {
               <p className="text-slate-300 text-sm max-w-md mx-auto">
                 Thank you {name}. Our loan advisor will call you at <strong>{phone}</strong> to guide you through bank eligibility and fast approvals.
               </p>
+              {whatsappUrl && (
+                <div className="pt-2 max-w-sm mx-auto">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-900/30"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-white" />
+                    <span>Speed Up Approval via WhatsApp</span>
+                  </a>
+                  <p className="text-[11px] text-slate-400 mt-2">
+                    Send your calculated figures directly to our finance officer
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleApply} className="space-y-6">

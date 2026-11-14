@@ -16,6 +16,7 @@ export default function Navbar() {
     { name: "Browse by Make", href: "/inventory#makes" },
     { name: "Finance", href: "/finance" },
     { name: "Sell My Car", href: "/sell-my-car" },
+    { name: "Track RC", href: "/track-rc" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];

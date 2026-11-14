@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
 import { financeLeadSchema } from "@/lib/validation/finance";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
   return Promise.race([
@@ -13,6 +14,25 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: 10 finance applications per 10 minutes per IP
+    const rateLimit = checkRateLimit(req, {
+      maxRequests: 10,
+      windowSeconds: 600,
+      keyPrefix: "finance",
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many applications submitted. Please wait ${Math.ceil(
+            (rateLimit.retryAfterSeconds || 60) / 60
+          )} minutes before submitting again.`,
+        },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds || 600) } }
+      );
+    }
+
     const body = await req.json();
     const validation = financeLeadSchema.safeParse(body);
 
@@ -28,6 +48,20 @@ export async function POST(req: Request) {
       ...leadData,
       estimated_emi: leadData.estimated_emi || 0,
     };
+
+    // Instant Lead WhatsApp Notification link
+    const dealerWhatsApp = "918172946630";
+    const waText = [
+      `💰 *New Car Loan Application — New Sai Car Bazar*`,
+      `👤 *Applicant:* ${leadData.name}`,
+      `📞 *Phone:* ${leadData.phone}`,
+      `💵 *Loan Amount:* ₹${leadData.loan_amount.toLocaleString("en-IN")}`,
+      `📅 *Tenure:* ${leadData.tenure} Months`,
+      `🏷️ *Down Payment:* ₹${leadData.down_payment.toLocaleString("en-IN")}`,
+      leadData.employment_type ? `💼 *Employment:* ${leadData.employment_type}` : null,
+      leadData.monthly_income ? `📊 *Income:* ₹${leadData.monthly_income.toLocaleString("en-IN")}/mo` : null,
+    ].filter(Boolean).join("\n");
+    const whatsappUrl = `https://wa.me/${dealerWhatsApp}?text=${encodeURIComponent(waText)}`;
 
     const client = supabaseAdmin || supabase;
 
@@ -60,7 +94,12 @@ export async function POST(req: Request) {
 
         if (!error && data) {
           DataStore.createFinanceLead(cleanLeadData);
-          return NextResponse.json({ success: true, data });
+          return NextResponse.json({
+            success: true,
+            data,
+            whatsappUrl,
+            message: "Finance inquiry submitted successfully. Instant WhatsApp dispatch ready.",
+          });
         }
       } catch {
         // Fallback to DataStore when Supabase cloud is unreachable
@@ -68,7 +107,11 @@ export async function POST(req: Request) {
     }
 
     DataStore.createFinanceLead(cleanLeadData);
-    return NextResponse.json({ success: true, message: "Finance inquiry submitted successfully" });
+    return NextResponse.json({
+      success: true,
+      whatsappUrl,
+      message: "Finance inquiry submitted successfully. Instant WhatsApp dispatch ready.",
+    });
   } catch (err: any) {
     console.error("Finance API error:", err);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAdminAuth } from "@/lib/adminAuth";
 import fs from "fs/promises";
 import path from "path";
 
@@ -21,6 +22,15 @@ async function saveToLocalDisk(buffer: Buffer, filename: string): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
+    // Defense-in-depth: Validate admin credentials
+    const isAuthed = await requireAdminAuth(request);
+    if (!isAuthed) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin credentials required." },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
 
     // Support single 'file' or multiple 'files'

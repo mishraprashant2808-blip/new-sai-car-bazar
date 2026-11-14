@@ -78,4 +78,25 @@ export async function verifyAdminToken(token?: string | null): Promise<AdminSess
   }
 }
 
+export async function requireAdminAuth(req: Request): Promise<boolean> {
+  // 1. Check cookie
+  const cookieHeader = req.headers.get("cookie") || "";
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE_NAME}=([^;]+)`));
+  const token = match ? decodeURIComponent(match[1]) : null;
+  if (token) {
+    const session = await verifyAdminToken(token);
+    if (session) return true;
+  }
+
+  // 2. Check Authorization header (Bearer)
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const bearerToken = authHeader.slice(7).trim();
+    const session = await verifyAdminToken(bearerToken);
+    if (session) return true;
+  }
+
+  return false;
+}
+
 export { SESSION_COOKIE_NAME, DEFAULT_ADMIN_EMAIL };

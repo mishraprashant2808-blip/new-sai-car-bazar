@@ -335,6 +335,8 @@ export const DataStore = {
 
   // --- LEADS & ENQUIRIES ---
   getLeads(): Lead[] {
+    // Client-side guard: Never expose private customer leads to public browser clients
+    if (typeof window !== "undefined") return [];
     return [...leadsCache].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
 
@@ -357,6 +359,8 @@ export const DataStore = {
 
   // --- FINANCE LEADS ---
   getFinanceLeads(): FinanceLead[] {
+    // Client-side guard: Never expose finance customer applications to public browser clients
+    if (typeof window !== "undefined") return [];
     return [...financeLeadsCache].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
 
@@ -379,6 +383,8 @@ export const DataStore = {
 
   // --- SELL CAR REQUESTS ---
   getSellCarRequests(): SellCarRequest[] {
+    // Client-side guard: Never expose seller requests to public browser clients
+    if (typeof window !== "undefined") return [];
     return [...sellCarCache].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
 
@@ -540,6 +546,9 @@ export const DataStore = {
 
   // --- AGREEMENTS / DEEDS ---
   getAgreements(params?: { type?: string; rc_status?: string; search?: string }): Agreement[] {
+    // Client-side guard: Never expose deed records or customer Aadhaar/addresses to browser clients
+    if (typeof window !== "undefined") return [];
+
     let result = [...getAgreementsCache()];
     if (params?.type) {
       result = result.filter(a => a.deed_type === params.type);
@@ -561,6 +570,7 @@ export const DataStore = {
   },
 
   getAgreementById(id: string): Agreement | undefined {
+    if (typeof window !== "undefined") return undefined;
     return getAgreementsCache().find(a => a.id === id);
   },
 

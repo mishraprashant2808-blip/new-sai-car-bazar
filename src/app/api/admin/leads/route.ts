@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { DataStore } from "@/lib/data/store";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,11 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 1500): Promise<T> {
   ]);
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     if (supabaseAdmin) {
       try {
@@ -66,6 +71,10 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const { type, id, status } = await req.json();
 

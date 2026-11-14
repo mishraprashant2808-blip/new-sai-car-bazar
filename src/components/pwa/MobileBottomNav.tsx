@@ -100,6 +100,14 @@ export default function MobileBottomNav() {
                 <MessageCircle className="w-4 h-4" />
                 <span>Chat on WhatsApp (+91 8172946630)</span>
               </a>
+
+              <Link
+                href="/track-rc"
+                onClick={() => setContactSheetOpen(false)}
+                className="w-full bg-[#1F2D42] hover:bg-[#2A3C56] text-amber-300 font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 border border-amber-500/20"
+              >
+                <span>Track Live RC Transfer Status</span>
+              </Link>
             </div>
           </div>
         </div>

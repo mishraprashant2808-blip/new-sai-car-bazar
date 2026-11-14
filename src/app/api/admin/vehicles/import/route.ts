@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DataStore } from "@/lib/data/store";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 export async function POST(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const { csvContent } = await req.json();
     if (!csvContent || typeof csvContent !== "string") {

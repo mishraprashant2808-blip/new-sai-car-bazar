@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabase } from "@/lib/supabase/client";
 import { DataStore } from "@/lib/data/store";
 import { numberToHindiWords } from "@/lib/hindiNumbers";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 function getClient() {
   return supabaseAdmin || supabase;
@@ -17,6 +18,10 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 1200): Promise<T> {
 
 // GET /api/admin/agreements - list all agreements
 export async function GET(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") || undefined;
   const search = searchParams.get("search") || undefined;
@@ -54,6 +59,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/agreements - create new agreement
 export async function POST(req: NextRequest) {
+  if (!(await requireAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized. Admin credentials required." }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
 

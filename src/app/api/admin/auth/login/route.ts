@@ -1,8 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminToken, SESSION_COOKIE_NAME, DEFAULT_ADMIN_EMAIL } from "@/lib/adminAuth";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Brute force rate limiting: 5 attempts per 15 minutes per IP
+    const rateLimit = checkRateLimit(req, {
+      maxRequests: 5,
+      windowSeconds: 15 * 60,
+      keyPrefix: "admin-login",
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many login attempts. Please try again after ${Math.ceil(
+            (rateLimit.retryAfterSeconds || 60) / 60
+          )} minutes.`,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds || 900),
+          },
+        }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
