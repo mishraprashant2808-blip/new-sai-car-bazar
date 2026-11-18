@@ -183,8 +183,33 @@ export default function EditVehiclePage({
     const selectedMakeObj = makes.find((m) => m.id === makeId);
     const finalPhoto = imageUrl.trim() || getAppropriateCarPhoto(selectedMakeObj?.name, modelName || variant, bodyType);
 
-    const updatedData: Partial<Vehicle> & { imageUrl?: string } = {
-      make_id: makeId,
+    const makeObj: Make = selectedMakeObj || {
+      id: makeId || "m-custom",
+      name: makes.find((m) => m.id === makeId)?.name || "Car",
+      slug: (makes.find((m) => m.id === makeId)?.name || "car").toLowerCase().replace(/\s+/g, "-"),
+      is_active: true,
+      sort_order: 99,
+    };
+
+    const modelObj = {
+      id: vehicle?.model?.id || `mod-${Date.now()}`,
+      make_id: makeObj.id,
+      name: modelName || variant || "Model",
+      slug: (modelName || variant || "model").toLowerCase().replace(/\s+/g, "-"),
+      is_active: true,
+    };
+
+    const updatedData: Partial<Vehicle> & {
+      imageUrl?: string;
+      make_name?: string;
+      model_name?: string;
+    } = {
+      make_id: makeObj.id,
+      model_id: modelObj.id,
+      make: makeObj,
+      model: modelObj,
+      make_name: makeObj.name,
+      model_name: modelObj.name,
       variant,
       year: Number(year),
       price: Number(price),
@@ -213,7 +238,7 @@ export default function EditVehiclePage({
           vehicle_id: vehicle.id,
           storage_path: finalPhoto,
           image_url: finalPhoto,
-          alt_text: `${variant || modelName || "Vehicle"}`,
+          alt_text: `${makeObj.name} ${modelObj.name} ${variant}`.trim(),
           sort_order: 0,
           is_primary: true,
         },

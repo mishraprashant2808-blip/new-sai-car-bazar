@@ -24,7 +24,7 @@ export default function AboutPage() {
               Founded on the pillars of honesty, uncompromised vehicle quality, and complete transparency, New Sai Car Bazar has grown to become the premier certified pre-owned automotive dealership in Barabanki.
             </p>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Every single automobile on our showroom floor undergoes a thorough 150-point technical inspection by certified mechanics. From verifying non-accidental chassis integrity to rigorous engine health testing and computerized diagnostic scans, we guarantee peace of mind with zero hidden surprises.
+              Every single automobile on our showroom floor undergoes a thorough comprehensive technical inspection by certified mechanics. From verifying non-accidental chassis integrity to rigorous engine health testing and computerized diagnostic scans, we guarantee peace of mind with zero hidden surprises.
             </p>
             <div className="pt-4 flex flex-wrap gap-4">
               <Link
@@ -74,7 +74,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-xl bg-red-600/10 text-[#ED0000] flex items-center justify-center mb-5">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">150-Point Certified Check</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Comprehensive Pre-Sale Verification</h3>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
                 Comprehensive physical and mechanical audit covering brakes, suspension, powertrain, electrical systems, air conditioning, and safety equipment.
               </p>

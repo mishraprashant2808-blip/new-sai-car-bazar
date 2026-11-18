@@ -61,7 +61,7 @@ export default function WhyBuySection() {
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 bg-[#162032] px-3.5 py-2 rounded-lg border border-[#273549]">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span>7-Day Return Guarantee</span>
+                <span>Easy Vehicle Exchange</span>
               </div>
             </div>
           </div>

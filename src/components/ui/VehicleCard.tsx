@@ -79,7 +79,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
         {/* Certification Tag */}
         <div className="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur-sm text-slate-200 text-[11px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>150-Point Certified</span>
+          <span>Multi-Point Verified</span>
         </div>
       </div>
 

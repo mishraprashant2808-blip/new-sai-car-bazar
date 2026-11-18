@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle2, Instagram } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle2, Instagram, Navigation, ExternalLink } from "lucide-react";
 import { createPhoneCallUrl, createWhatsAppUrl } from "@/lib/utils";
 import { DataStore } from "@/lib/data/store";
 import { leadSchema } from "@/lib/validation/lead";
@@ -261,6 +261,47 @@ export default function ContactPage() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+
+        {/* Live Google Maps Showroom Section */}
+        <div className="mt-16 bg-[#121B2A] border border-[#273549] rounded-2xl overflow-hidden shadow-2xl">
+          <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E293B]">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-[#ED0000] uppercase tracking-wider">
+                <Navigation className="w-4 h-4" />
+                <span>Live Showroom Location</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
+                Find New Sai Car Bazar on Google Maps
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                Near Railway Crossing, Lucknow-Ayodhya Road, Barabanki, Uttar Pradesh 225001
+              </p>
+            </div>
+
+            <a
+              href="https://www.google.com/maps/place/New+Sai+car+Bazar/@26.9296306,81.2186657,17z/data=!3m1!4b1!4m6!3m5!1s0x3999617cf9ddfa15:0x7a3e0c1951d1c2dc!8m2!3d26.9296306!4d81.2186657!16s%2Fg%2F11zxrwgp2z?entry=ttu&g_ep=EgoyMDI2MTExNi4wIKXMDSoASAFQAw%3D%3D"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#ED0000] hover:bg-[#D10000] text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-red-950/40 shrink-0 cursor-pointer"
+            >
+              <Navigation className="w-4 h-4" />
+              <span>Get Live Directions</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          </div>
+
+          {/* Interactive Google Map iframe */}
+          <div className="relative w-full h-[380px] sm:h-[450px] bg-[#0E1526]">
+            <iframe
+              title="New Sai Car Bazar Google Maps Location"
+              src="https://maps.google.com/maps?q=26.9296306,81.2186657&z=17&output=embed"
+              className="w-full h-full border-0 filter contrast-[1.05] brightness-[0.95]"
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </div>
 

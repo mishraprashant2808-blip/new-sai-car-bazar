@@ -230,7 +230,7 @@ export default function VehicleDetailPage({ params }: PageProps) {
               />
               <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs text-slate-300 border border-white/10 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>150-Point Certified Guarantee</span>
+                <span>Multi-Point Verified Guarantee</span>
               </div>
             </div>
 

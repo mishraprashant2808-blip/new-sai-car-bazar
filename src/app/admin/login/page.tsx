@@ -41,6 +41,12 @@ export default function AdminLoginPage() {
           const { data, error } = await Promise.race([authPromise, timeoutPromise]);
           if (!error && data?.session) {
             loggedIn = true;
+            // Also establish resilient admin cookie session
+            fetch("/api/admin/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+            }).catch(() => {});
           }
         } catch {
           // Supabase DNS unresolvable, paused, or network failure — proceed to resilient login

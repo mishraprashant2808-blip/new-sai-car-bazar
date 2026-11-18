@@ -79,7 +79,7 @@ export async function verifyAdminToken(token?: string | null): Promise<AdminSess
 }
 
 export async function requireAdminAuth(req: Request): Promise<boolean> {
-  // 1. Check cookie
+  // 1. Check resilient cookie
   const cookieHeader = req.headers.get("cookie") || "";
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE_NAME}=([^;]+)`));
   const token = match ? decodeURIComponent(match[1]) : null;
@@ -94,6 +94,65 @@ export async function requireAdminAuth(req: Request): Promise<boolean> {
     const bearerToken = authHeader.slice(7).trim();
     const session = await verifyAdminToken(bearerToken);
     if (session) return true;
+
+    // Check if Bearer token is a valid Supabase JWT
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnonKey && bearerToken.length > 20) {
+      try {
+        const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          headers: {
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${bearerToken}`,
+          },
+        });
+        if (res.ok) {
+          const user = await res.json();
+          if (user?.id) return true;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  }
+
+  // 3. Check Supabase cookies in request
+  const hasSupabaseCookie = cookieHeader.includes("sb-") && cookieHeader.includes("-auth-token");
+  if (hasSupabaseCookie) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnonKey) {
+      try {
+        const sbMatch = cookieHeader.match(/sb-[^=]+-auth-token=([^;]+)/);
+        if (sbMatch) {
+          let rawVal = decodeURIComponent(sbMatch[1]);
+          if (rawVal.startsWith("base64-")) {
+            rawVal = Buffer.from(rawVal.slice(7), "base64").toString("utf-8");
+          }
+          let accessToken = "";
+          try {
+            const parsed = JSON.parse(rawVal);
+            accessToken = Array.isArray(parsed) ? parsed[0] : (parsed?.access_token || parsed?.[0]?.access_token);
+          } catch {
+            accessToken = rawVal;
+          }
+          if (accessToken) {
+            const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+              headers: {
+                apikey: supabaseAnonKey,
+                Authorization: `Bearer ${accessToken}`,
+              },
+            });
+            if (res.ok) {
+              const user = await res.json();
+              if (user?.id) return true;
+            }
+          }
+        }
+      } catch {
+        // Supabase network unreachable
+      }
+    }
   }
 
   return false;

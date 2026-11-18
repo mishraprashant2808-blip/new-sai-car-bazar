@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "New Sai Car Bazar | Quality Assured Used Cars in Barabanki",
-    description: "Find your perfect certified pre-owned car with 150-point inspection and transparent pricing.",
+    description: "Find your perfect certified pre-owned car with multi-point inspection and transparent pricing.",
     type: "website",
     locale: "en_IN",
   },

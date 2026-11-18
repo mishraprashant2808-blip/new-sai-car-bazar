@@ -98,7 +98,7 @@ export default function AdminNewVehiclePage() {
       rto_state: "UP",
       ownership,
       insurance_validity: insurance,
-      description: description || `Certified ${year} ${selectedMakeObj.name} ${modelName} in excellent condition, verified with 150-point inspection at New Sai Car Bazar.`,
+      description: description || `Certified ${year} ${selectedMakeObj.name} ${modelName} in excellent condition, verified with comprehensive multi-point inspection at New Sai Car Bazar.`,
       features: selectedFeatures,
       status,
       is_featured: isFeatured,

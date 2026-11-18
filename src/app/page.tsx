@@ -19,7 +19,7 @@ export default async function HomePage() {
     "@id": "https://new-sai-car-bazar.vercel.app/#dealership",
     "name": "New Sai Car Bazar",
     "alternateName": "New Sai Car Bazar Barabanki",
-    "description": "Certified pre-owned and quality used cars dealership in Barabanki and Lucknow, Uttar Pradesh. 150-point inspection, instant car loan financing, exchange options, and RC transfer support.",
+    "description": "Certified pre-owned and quality used cars dealership in Barabanki and Lucknow, Uttar Pradesh. Comprehensive quality check, instant car loan financing, exchange options, and RC transfer support.",
     "url": "https://new-sai-car-bazar.vercel.app",
     "sameAs": [
       "https://www.instagram.com/sai_car_deals/"

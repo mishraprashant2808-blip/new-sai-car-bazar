@@ -34,7 +34,7 @@ const leaders: Leader[] = [
     whatsapp: "8528886630",
     image: "/team/shivam-mishra.jpg",
     badge: "Operations & Digital",
-    bio: "Spearheading modern operations, technical inspections, and seamless customer service, Mr. Shivam Mishra brings dynamic leadership to New Sai Car Bazar. He oversees our 150-point quality verification, swift RC documentation, and instant car financing facilitation.",
+    bio: "Spearheading modern operations, technical inspections, and seamless customer service, Mr. Shivam Mishra brings dynamic leadership to New Sai Car Bazar. He oversees our comprehensive quality verification, swift RC documentation, and instant car financing facilitation.",
     highlight: "“We are redefining used car buying with complete transparency, verified service histories, and end-to-end customer care.”",
   },
 ];

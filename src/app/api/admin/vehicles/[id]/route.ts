@@ -102,6 +102,7 @@ export async function PUT(
         if (body.is_new_arrival !== undefined) dbUpdates.is_new_arrival = Boolean(body.is_new_arrival);
         if (body.is_hot_deal !== undefined) dbUpdates.is_hot_deal = Boolean(body.is_hot_deal);
         if (body.make_id !== undefined) dbUpdates.make_id = body.make_id;
+        if (body.model_id !== undefined) dbUpdates.model_id = body.model_id;
 
         const updatePromise = client
           .from("vehicles")

@@ -37,9 +37,8 @@ export default function MobileBottomNav() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex flex-col items-center justify-center h-full transition relative ${
-                  isActive ? "text-[#ED0000]" : "text-slate-400 hover:text-slate-200"
-                }`}
+                className={`flex flex-col items-center justify-center h-full transition relative ${isActive ? "text-[#ED0000]" : "text-slate-400 hover:text-slate-200"
+                  }`}
               >
                 {isActive && (
                   <span className="absolute top-0 w-8 h-0.5 bg-[#ED0000] rounded-full shadow-[0_0_8px_#ED0000]" />

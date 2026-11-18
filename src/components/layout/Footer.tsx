@@ -30,7 +30,7 @@ export default function Footer() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-base">Certified Inspection</h4>
-                <p className="text-slate-400 text-xs sm:text-sm mt-1">150-Point Pre-Sale Check</p>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">Multi-Point Pre-Sale Check</p>
               </div>
             </div>
 
@@ -213,11 +213,17 @@ export default function Footer() {
               )}
             </form>
 
-            <div className="mt-6 text-xs text-slate-400 space-y-1">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#ED0000] shrink-0" />
-                <span>Barabanki, Uttar Pradesh, India</span>
-              </div>
+            <div className="mt-6 text-xs text-slate-400 space-y-1.5">
+              <a
+                href="https://www.google.com/maps/place/New+Sai+car+Bazar/@26.9296306,81.2186657,17z/data=!3m1!4b1!4m6!3m5!1s0x3999617cf9ddfa15:0x7a3e0c1951d1c2dc!8m2!3d26.9296306!4d81.2186657!16s%2Fg%2F11zxrwgp2z"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 hover:text-white transition group"
+                title="Open New Sai Car Bazar on Google Maps"
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#ED0000] shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="underline decoration-dotted underline-offset-2">Near Railway Crossing, Barabanki (Maps)</span>
+              </a>
               <div className="flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-[#ED0000] shrink-0" />
                 <span>+91 8858982362</span>

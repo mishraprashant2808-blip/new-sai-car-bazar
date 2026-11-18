@@ -186,11 +186,23 @@ export const DataStore = {
 
         if (!error && data && data.length > 0) {
           const list = getVehiclesCache();
-          const supabaseIds = new Set(data.map((d: any) => d.id));
-          const localOnly = list.filter(v => !supabaseIds.has(v.id));
-          const merged = [...(data as Vehicle[]), ...localOnly];
-          setVehiclesCache(merged);
-          return merged;
+          const localMap = new Map(list.map(v => [v.id, v]));
+          const merged = (data as Vehicle[]).map(remoteV => {
+            const localV = localMap.get(remoteV.id);
+            if (localV) {
+              const localTime = localV.updated_at ? new Date(localV.updated_at).getTime() : 0;
+              const remoteTime = remoteV.updated_at ? new Date(remoteV.updated_at).getTime() : 0;
+              if (!remoteV.updated_at || localTime >= remoteTime) {
+                return localV;
+              }
+            }
+            return remoteV;
+          });
+          const remoteIds = new Set(data.map((d: any) => d.id));
+          const localOnly = list.filter(v => !remoteIds.has(v.id));
+          const finalResult = [...merged, ...localOnly];
+          setVehiclesCache(finalResult);
+          return finalResult;
         }
       } catch (e) {
         console.error('Supabase fetchVehicles error:', e);
@@ -296,19 +308,53 @@ export const DataStore = {
     return newVehicle;
   },
 
-  updateVehicle(id: string, updates: Partial<Vehicle>): Vehicle | undefined {
+  updateVehicle(id: string, updates: Partial<Vehicle> & { imageUrl?: string; make_name?: string; model_name?: string }): Vehicle | undefined {
     const list = getVehiclesCache();
     const idx = list.findIndex(v => v.id === id || v.slug === id);
     if (idx === -1) return undefined;
 
-    const make = updates.make_id ? makesCache.find(m => m.id === updates.make_id) : list[idx].make;
-    const model = updates.model_id ? modelsCache.find(m => m.id === updates.model_id) : list[idx].model;
+    const make = updates.make
+      || (updates.make_id ? makesCache.find(m => m.id === updates.make_id) : undefined)
+      || list[idx].make;
+
+    let model = updates.model;
+    if (!model && updates.model_name) {
+      model = {
+        id: updates.model_id || list[idx].model?.id || `mod-${Date.now()}`,
+        make_id: make?.id || list[idx].make_id,
+        name: updates.model_name,
+        slug: updates.model_name.toLowerCase().replace(/\s+/g, '-'),
+        is_active: true
+      };
+    } else if (!model && updates.model_id) {
+      model = modelsCache.find(m => m.id === updates.model_id) || list[idx].model;
+    } else if (!model) {
+      model = list[idx].model;
+    }
+
+    let images = updates.images || list[idx].images;
+    const newImgUrl = updates.imageUrl || (updates as any).image_url;
+    if (newImgUrl) {
+      images = [
+        {
+          id: list[idx].images?.[0]?.id || `img-${Date.now()}`,
+          vehicle_id: id,
+          storage_path: newImgUrl,
+          image_url: newImgUrl,
+          alt_text: `${make?.name || ""} ${model?.name || updates.variant || "Vehicle"}`.trim(),
+          sort_order: 0,
+          is_primary: true
+        },
+        ...(list[idx].images?.filter(img => !img.is_primary) || [])
+      ];
+    }
 
     list[idx] = {
       ...list[idx],
       ...updates,
       make,
       model,
+      images,
       updated_at: new Date().toISOString(),
     };
 
